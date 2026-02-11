@@ -1,0 +1,13 @@
+# Ignore everything
+*
+
+# Allow directories so Git can see inside them
+!*/
+
+# Only allow code and vsp3 files
+!*.C
+!*.H
+!*.cpp
+!*.h
+!*.vsp3
+!.gitignore

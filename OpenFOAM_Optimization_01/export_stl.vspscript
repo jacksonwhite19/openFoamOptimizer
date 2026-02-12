@@ -1,0 +1,18 @@
+void main()
+{
+    ClearVSPModel();
+
+    // Load geometry
+    ReadVSPFile("Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/baseline.vsp3");
+    Update();
+
+    // Export STL for OpenFOAM
+    // We export to the geometry folder first. Later, this should be moved to 
+    // constant/triSurface/vehicle.stl in the OpenFOAM case directory.
+    string output_file = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/baseline.stl";
+
+    // ExportFile(filename, set_index, format) - SET_ALL exports all components
+    ExportFile(output_file, SET_ALL, EXPORT_STL);
+
+    Print("STL geometry exported to: " + output_file);
+}

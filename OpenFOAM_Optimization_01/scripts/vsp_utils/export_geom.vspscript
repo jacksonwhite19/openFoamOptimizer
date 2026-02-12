@@ -1,0 +1,12 @@
+    // 1. Update Geometry from Design Variables
+    Update();
+
+    // 2. Calculate Mass Properties
+    // This function prints the Mass and CG to the standard output automatically
+    ComputeMassProps(0, 100, 100);
+
+    // 3. Export Watertight STL (CompGeom)
+    // Args: SetIndex(0), HalfMesh(false), FileType(0=STL)
+    // This will typically write to 'baseline_CompGeom.stl' or 'baseline.stl'
+    ComputeCompGeom(0, false, 0);
+}

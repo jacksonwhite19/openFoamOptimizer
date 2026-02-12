@@ -1,13 +1,20 @@
-# Ignore everything
+# 1. Ignore everything by default
 *
 
-# Allow directories so Git can see inside them
+# 2. Allow directories so Git can find your files
 !*/
 
-# Only allow code and vsp3 files
+# 3. Allow specific file types (Source, Scripts, Docs)
 !*.C
 !*.H
 !*.cpp
 !*.h
 !*.vsp3
+!*.vspscript
+!*.py
+!*.md
 !.gitignore
+
+# 4. Explicitly block OpenFOAM time-step data folders
+# (This catches folders starting with numbers like 0, 0.001, 1, etc.)
+[0-9]*

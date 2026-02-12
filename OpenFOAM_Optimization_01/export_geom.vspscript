@@ -1,0 +1,27 @@
+void main()
+{
+    ClearVSPModel();
+
+    // Load geometry
+    ReadVSPFile("Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/baseline.vsp3");
+    Update();
+
+    // Run Mass Properties analysis
+    string analysis = "MassProp";
+    SetAnalysisInputDefaults(analysis);
+
+    string res_id = ExecAnalysis(analysis);
+
+    // Write official OpenVSP mass properties report
+    WriteResultsCSVFile(res_id,
+        "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/baseline_massprops.csv");
+
+    Print("Mass properties exported.");
+
+    // Error dump (useful for debugging)
+    while (GetNumTotalErrors() > 0)
+    {
+        ErrorObj err = PopLastError();
+        Print(err.GetErrorString());
+    }
+}

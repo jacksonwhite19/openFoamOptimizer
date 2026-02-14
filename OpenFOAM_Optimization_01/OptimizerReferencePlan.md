@@ -23,7 +23,7 @@ Automated optimization of a drone airframe using OpenVSP (Geometry/Stability) an
 3. Implementation Phases
 Phase A: The Geometry Engine (The "Concierge")
 
-    [ ] Task 1: Write scripts/vsp_utils/export_geom.vspscript.
+    [x] Task 1: Write scripts/vsp_utils/export_geom.vspscript.
 
         Load .vsp3 and .des.
 

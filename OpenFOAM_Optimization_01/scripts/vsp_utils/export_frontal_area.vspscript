@@ -29,12 +29,9 @@ void main()
     {
         double Afrontal_mm2 = area[0];
         double Afrontal_m2 = Afrontal_mm2 / 1000000.0;
-        double diff = 34978.9 - Afrontal_mm2;
-        double pct_diff = (diff / 34978.9) * 100.0;
         
         Print("Frontal Area: " + Afrontal_mm2 + " mm^2");
         Print("Frontal Area: " + Afrontal_m2 + " m^2");
-        Print("Difference vs GUI: " + diff + " mm^2 (" + pct_diff + "%)");
     }
 
     DeleteGeomVec(GetStringResults(rid, "Mesh_GeomID"));

@@ -1,3 +1,4 @@
+// to run: "C:\Users\Jackson\Desktop\ZZ_Software Downloads\OpenVSP-3.46.0-win64\vsp.exe" -script "Z:\home\jwhite\JWsim\OpenFOAM_Optimization_01\scripts\vsp_utils\export_geom.vspscript"
 void main()
 {
     ClearVSPModel();

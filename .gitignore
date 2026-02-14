@@ -13,6 +13,7 @@
 !*.vspscript
 !*.py
 !*.md
+!*.des
 !.gitignore
 
 # 4. Explicitly block OpenFOAM time-step data folders

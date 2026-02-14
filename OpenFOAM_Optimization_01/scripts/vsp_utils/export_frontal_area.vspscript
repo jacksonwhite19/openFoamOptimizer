@@ -1,0 +1,47 @@
+void main()
+{
+    // --- Clear existing model ---
+    ClearVSPModel();
+
+    // --- Load baseline geometry and DES file ---
+    string vsp_file = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/source/baseline.vsp3";
+    ReadVSPFile(vsp_file);
+
+    string des_file = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/source/baseline.des";
+    ReadApplyDESFile(des_file);
+
+    Update();
+    Update();  // Double update to ensure DES changes propagate
+
+    // --- Projected Area (Frontal) ---
+    array<int> dirtype = GetIntAnalysisInput("Projection", "DirectionType");
+    dirtype[0] = X_PROJ;
+    SetIntAnalysisInput("Projection", "DirectionType", dirtype);
+
+    string rid = ExecAnalysis("Projection");
+    Update();
+
+    string output_csv = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/outputs/baseline_frontal_area.csv";
+    WriteResultsCSVFile(rid, output_csv);
+
+    array<double> area = GetDoubleResults(rid, "Area");
+    if (area.size() > 0)
+    {
+        double Afrontal_mm2 = area[0];
+        double Afrontal_m2 = Afrontal_mm2 / 1000000.0;
+        double diff = 34978.9 - Afrontal_mm2;
+        double pct_diff = (diff / 34978.9) * 100.0;
+        
+        Print("Frontal Area: " + Afrontal_mm2 + " mm^2");
+        Print("Frontal Area: " + Afrontal_m2 + " m^2");
+        Print("Difference vs GUI: " + diff + " mm^2 (" + pct_diff + "%)");
+    }
+
+    DeleteGeomVec(GetStringResults(rid, "Mesh_GeomID"));
+
+    while (GetNumTotalErrors() > 0)
+    {
+        ErrorObj err = PopLastError();
+        Print("Error: " + err.GetErrorString());
+    }
+}

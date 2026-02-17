@@ -3,6 +3,49 @@
 
 ---
 
+## 0. Status Dashboard (Live)
+
+### Last Updated
+- 2026-02-15
+
+### Status Legend
+- `[x]` Completed
+- `[~]` In Progress / Partially complete
+- `[ ]` Not Started
+- `[!]` Blocked / Needs decision
+
+### Current Phase Status
+
+| Phase | Scope | Status | Notes |
+|---|---|---|---|
+| 0 | Human pre-requisites and environment setup | `[~]` | Working baseline plans exist; full environment validation still pending against target hardware. |
+| 1 | Geometry processing and mesh generation | `[~]` | VSP export/parsing/injection scripts are in place; full mesh generation validation run is pending. |
+| 2 | Flow physics setup | `[~]` | forceCoeffs/snappy dictionary injection path exists; full boundary-condition and turbulence field verification remains. |
+| 3 | Solver execution and convergence monitoring | `[ ]` | Full single-angle convergence run not yet logged in this plan. |
+| 4 | Force extraction and data processing | `[~]` | Post-processing script exists (`data_analysis.py`); needs validation on completed OpenFOAM runs. |
+| 5 | Multi-alpha sweep orchestration | `[ ]` | Sweep framework planned; production sweep orchestration not yet validated. |
+| 10 | Failure recovery and error handling | `[~]` | Error taxonomy defined in plan; code-level retry/recovery automation still pending. |
+| 11 | Validation and testing strategy | `[~]` | Test definitions are documented; execution evidence/checklist completion pending. |
+| 13 | Optimizer integration | `[ ]` | Not yet integrated end-to-end. |
+
+### Accomplished So Far
+- `[x]` Comprehensive pipeline planning completed in `plan.md`.
+- `[x]` Single-angle validation playbook documented in `single_angle_full_run_plan.md`.
+- `[x]` Script data-flow inventory created in `scripts/SCRIPT_DATA_FLOW_TRACKER.md` (inputs, outputs, dependencies).
+- `[x]` Core geometry/reference tooling exists in `scripts/`:
+  - VSP analysis scripts for mass/degen and frontal area export
+  - Python utilities for reference computation, parsing, and OpenFOAM dictionary injection
+- `[~]` End-to-end single-angle CFD execution remains to be fully completed and recorded with convergence evidence.
+
+### Next Milestone
+- Execute and record one full validated single-angle run (`alpha_8`) with:
+  - mesh quality pass (`checkMesh`)
+  - solver residual convergence
+  - stable force coefficients
+  - archived result summary
+
+---
+
 ## 1. Executive Summary
 
 This document outlines the complete workflow for automating aerodynamic optimization of a fixed-wing drone geometry. The pipeline bridges OpenVSP (parametric geometry) with OpenFOAM (high-fidelity RANS CFD), replacing VSPAERO's panel method with viscous flow simulation to obtain accurate CL, CD, and L/D data across the design space.

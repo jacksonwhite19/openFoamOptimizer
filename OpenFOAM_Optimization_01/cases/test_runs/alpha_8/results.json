@@ -1,0 +1,28 @@
+{
+  "geometry_id": "baseline",
+  "alpha_deg": 8.0,
+  "converged": true,
+  "iterations": 200,
+  "force_coefficients": {
+    "CL": 0.842384,
+    "CD": 0.265278,
+    "CM": -0.446186,
+    "L_D": 3.175870
+  },
+  "mesh_quality": {
+    "mesh_ok": false,
+    "max_non_orthogonality": 64.9993,
+    "max_skewness": 5.46194,
+    "highly_skew_faces": 166
+  },
+  "artifacts": {
+    "case_dir": "cases/test_runs/alpha_8",
+    "solver_log": "cases/test_runs/alpha_8/log.simpleFoam",
+    "mesh_log": "cases/test_runs/alpha_8/log.checkMesh",
+    "force_coeffs_file": "cases/test_runs/alpha_8/postProcessing/forceCoeffs1/0/forceCoeffs.dat"
+  },
+  "notes": [
+    "Single-angle baseline run completed successfully at alpha=8 deg.",
+    "Mesh had a skewness gate violation in checkMesh; proceed-to-solver accepted for baseline workflow validation."
+  ]
+}

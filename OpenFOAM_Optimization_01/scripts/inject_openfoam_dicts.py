@@ -4,6 +4,7 @@ Updates forceCoeffs and snappyHexMeshDict with reference values from VSP.
 """
 
 import re
+import argparse
 from pathlib import Path
 from typing import Dict
 
@@ -123,20 +124,39 @@ def inject_all_openfoam_dicts(
 
 
 def main():
-    """Example usage"""
+    """CLI entrypoint."""
     from parse_vsp_outputs import parse_all_vsp_outputs
-    
-    # Example: Parse VSP outputs
-    geometry_outputs = Path("Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/outputs")
+
+    parser = argparse.ArgumentParser(description="Inject VSP-derived refs into OpenFOAM dictionaries.")
+    parser.add_argument(
+        "--geometry-outputs",
+        type=Path,
+        default=Path("geometry/outputs"),
+        help="Directory containing VSP output CSV files",
+    )
+    parser.add_argument(
+        "--case-dir",
+        type=Path,
+        default=Path("cases/test_runs/alpha_8"),
+        help="OpenFOAM case directory containing system/forceCoeffs and system/snappyHexMeshDict",
+    )
+    parser.add_argument(
+        "--stl-name",
+        type=str,
+        default="baseline.stl",
+        help="STL filename used in the case",
+    )
+    args = parser.parse_args()
+
+    geometry_outputs = args.geometry_outputs
     vsp_data = parse_all_vsp_outputs(
         geometry_outputs / "baseline_massprops.csv",
         geometry_outputs / "baseline_frontal_area.csv",
         geometry_outputs / "wing_refs.csv"
     )
-    
-    # Example: Update OpenFOAM case
-    case_dir = Path("Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/cases/baseline")
-    inject_all_openfoam_dicts(case_dir, vsp_data)
+
+    case_dir = args.case_dir
+    inject_all_openfoam_dicts(case_dir, vsp_data, stl_name=args.stl_name)
     
     print("\nInjected values:")
     print(f"  CG: ({vsp_data['cg_x']:.6f}, {vsp_data['cg_y']:.6f}, {vsp_data['cg_z']:.6f}) m")

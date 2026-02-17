@@ -4,6 +4,7 @@ Extracts CG, reference area, span, and chord from OpenVSP analysis outputs.
 """
 
 import csv
+import argparse
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -102,13 +103,39 @@ def parse_all_vsp_outputs(
 
 
 def main():
-    """Example usage"""
-    # Example paths - adjust as needed
-    geometry_outputs = Path("Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/outputs")
-    
-    massprops = geometry_outputs / "baseline_massprops.csv"
-    frontal_area = geometry_outputs / "baseline_frontal_area.csv"
-    wing_refs = geometry_outputs / "wing_refs.csv"
+    """CLI entrypoint."""
+    parser = argparse.ArgumentParser(description="Parse VSP CSV outputs into normalized SI units.")
+    parser.add_argument(
+        "--geometry-outputs",
+        type=Path,
+        default=Path("geometry/outputs"),
+        help="Directory containing baseline_massprops.csv, baseline_frontal_area.csv, and wing_refs.csv",
+    )
+    parser.add_argument(
+        "--massprops",
+        type=Path,
+        default=None,
+        help="Optional explicit path to baseline_massprops.csv",
+    )
+    parser.add_argument(
+        "--frontal-area",
+        type=Path,
+        default=None,
+        help="Optional explicit path to baseline_frontal_area.csv",
+    )
+    parser.add_argument(
+        "--wing-refs",
+        type=Path,
+        default=None,
+        help="Optional explicit path to wing_refs.csv",
+    )
+    args = parser.parse_args()
+
+    geometry_outputs = args.geometry_outputs
+
+    massprops = args.massprops or (geometry_outputs / "baseline_massprops.csv")
+    frontal_area = args.frontal_area or (geometry_outputs / "baseline_frontal_area.csv")
+    wing_refs = args.wing_refs or (geometry_outputs / "wing_refs.csv")
     
     # Parse all outputs
     vsp_data = parse_all_vsp_outputs(massprops, frontal_area, wing_refs)

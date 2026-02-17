@@ -1,28 +1,35 @@
 {
-  "geometry_id": "baseline",
+  "geometry_id": "baseline_te_thickened",
   "alpha_deg": 8.0,
-  "converged": true,
-  "iterations": 200,
+  "convergence_status": "quasi_steady",
+  "iterations": 400,
+  "averaging_window": {
+    "rows": 100,
+    "start_time": 301,
+    "end_time": 400
+  },
   "force_coefficients": {
-    "CL": 0.842384,
-    "CD": 0.265278,
-    "CM": -0.446186,
-    "L_D": 3.175870
+    "CL_mean": 0.472760,
+    "CL_std": 0.002695,
+    "CD_mean": 0.366488,
+    "CD_std": 0.000508,
+    "CM_mean": -0.170317,
+    "CM_std": 0.002636,
+    "L_D_mean": 1.289974
   },
   "mesh_quality": {
-    "mesh_ok": false,
-    "max_non_orthogonality": 64.9993,
-    "max_skewness": 5.46194,
-    "highly_skew_faces": 166
+    "mesh_ok": true,
+    "max_non_orthogonality": 26.8673,
+    "max_skewness": 1.0
   },
   "artifacts": {
     "case_dir": "cases/test_runs/alpha_8",
-    "solver_log": "cases/test_runs/alpha_8/log.simpleFoam",
-    "mesh_log": "cases/test_runs/alpha_8/log.checkMesh",
+    "solver_log": "cases/test_runs/alpha_8/log.simpleFoam.tefix3_long",
+    "mesh_log": "cases/test_runs/alpha_8/log.checkMesh.tefix3",
     "force_coeffs_file": "cases/test_runs/alpha_8/postProcessing/forceCoeffs1/0/forceCoeffs.dat"
   },
   "notes": [
-    "Single-angle baseline run completed successfully at alpha=8 deg.",
-    "Mesh had a skewness gate violation in checkMesh; proceed-to-solver accepted for baseline workflow validation."
+    "Trailing-edge-thickened geometry used for this run.",
+    "Metrics are averaged over the last 100 iterations to suppress oscillation noise."
   ]
 }

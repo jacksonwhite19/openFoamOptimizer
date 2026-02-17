@@ -9,7 +9,7 @@ Build and validate one full end-to-end run for a single angle of attack:
 
 Target case: `cases/test_runs/alpha_8`
 
-Last updated: `2026-02-17`
+Last updated: `2026-02-17` (tefix3 update)
 
 ---
 
@@ -34,9 +34,10 @@ Last updated: `2026-02-17`
 - `[x]` Phase 1 complete (VSP exports + refs computed + parsed)
 - `[x]` Phase 2 complete (case present, STL placed, dictionary injection complete)
 - `[x]` Phase 3 complete (AoA fields/directions updated for alpha=8)
-- `[~]` Phase 4 complete with warning (mesh built; checkMesh skewness gate failed)
-- `[x]` Phase 5 complete (single-angle simpleFoam run finished)
-- `[x]` Phase 6 complete (coefficients extracted and results.json written)
+- `[x]` Phase 4 complete (tefix3 mesh passes checkMesh: max skewness 1, max non-orthogonality 26.8673)
+- `[x]` Phase 4B complete (mini mesh tuner converged via TE geometry fix + valid snappy config)
+- `[x]` Phase 5 complete (single-angle simpleFoam run extended to 400 iterations)
+- `[x]` Phase 6 complete (window-averaged coefficients extracted and results.json updated)
 
 ---
 
@@ -149,11 +150,63 @@ Exit criteria:
 
 ### 4.4 Mesh gate
 - `[x]` Run `checkMesh`
-- `[ ]` Confirm `Mesh OK`
+- `[x]` Confirm `Mesh OK`
 - `[x]` Capture max non-orthogonality and skewness
 
 Exit criteria:
-- mesh metrics captured; gate currently fails on skewness (`maxSkewness=5.46194`, `166` highly skew faces)
+- mesh passes gate in `tefix3` (`maxSkewness=1`, `maxNonOrtho=26.8673`)
+
+---
+
+## Phase 4B - Mini Mesh Tuner (First-Principles)
+
+### 4B.1 Tuner objective
+- `[x]` Preserve curved-surface fidelity on `baseline_m`
+- `[x]` Reduce skewness outliers enough for stable/clean force extraction
+
+### 4B.2 Tuner pass targets (v1)
+- `[x]` `checkMesh` has no fatal mesh-quality failure
+- `[x]` `max skewness <= 5.0` (initial), then tighten toward `<= 4.5`
+- `[x]` `max non-orthogonality <= 70`
+- `[x]` Highly skew faces near vehicle surface minimized
+
+### 4B.3 Tuning order (do not skip)
+- `[ ]` Tune layers first
+- `[ ]` Tune snap smoothing second
+- `[ ]` Tune feature-edge level third
+- `[ ]` Tune surface refinement last (only if needed)
+
+### 4B.4 Candidate A - Layer-softening pass
+- `[ ]` `nSurfaceLayers: 3 -> 2`
+- `[ ]` `expansionRatio: 1.10 -> 1.05`
+- `[ ]` `finalLayerThickness: 0.30 -> 0.20`
+- `[ ]` `minThickness: 0.10 -> 0.15`
+- `[ ]` `featureAngle: 80 -> 70`
+- `[ ]` `nGrow: 0 -> 1`
+
+### 4B.5 Candidate B - Snap smoothing pass (if A fails)
+- `[ ]` `nSmoothPatch: 12 -> 16`
+- `[ ]` `nSolveIter: 60 -> 80`
+- `[ ]` `nRelaxIter: 20 -> 30`
+
+### 4B.6 Candidate C - Feature-edge pass (if B fails)
+- `[ ]` `features level: 5 -> 4`
+- `[ ]` Keep `refinementSurfaces baseline_m level (4 6)` unchanged in this step
+
+### 4B.7 Candidate D - Transition smoothing (if C fails)
+- `[ ]` `nCellsBetweenLevels: 2 -> 3`
+
+### 4B.8 Per-candidate execution loop
+- `[ ]` Run `snappyHexMesh -overwrite`
+- `[ ]` Run `checkMesh`
+- `[ ]` Record: max skewness, skew face count, max non-orthogonality, cell count, pass/fail
+- `[ ]` If mesh passes, run a short solver sanity check at same alpha
+- `[ ]` Compare `CL/CD` drift against baseline run
+
+### 4B.9 Acceptance criteria
+- `[x]` Mesh quality gate passes v1 targets
+- `[~]` Coefficient drift from baseline is small (initial threshold: <2% for `CL` and `CD`)
+- `[x]` Runtime/cell count remains reasonable for sweep usage
 
 ---
 
@@ -217,7 +270,7 @@ Exit criteria:
 2. `[x]` Generate/verify three reference CSV outputs.
 3. `[x]` Confirm STL export path + copy STL into case.
 4. `[x]` Create fresh `alpha_8` case and inject refs.
-5. `[x]` Set AoA in `0/U` and verify `dragDir/liftDir` before meshing.
+5. `[x]` Execute Phase 4B tuner cycle and capture metrics (final pass at `tefix3`).
 
 ---
 

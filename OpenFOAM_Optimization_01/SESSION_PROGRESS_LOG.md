@@ -122,3 +122,49 @@ Use this file for real-time, session-by-session tracking of what was completed, 
 
 ### Next Session Suggested Focus
 - Tune `snappyHexMeshDict` layer settings and feature refinement to remove skewness failure, then re-run `alpha_8` and compare coefficients.
+
+---
+
+## Session 003 - 2026-02-17
+
+### Objective
+- Resolve trailing-edge skewness issue and validate a clean single-angle mesh/solve result.
+
+### Work Completed
+- `[x]` Diagnosed persistent skew faces as trailing-edge localized in ParaView.
+- `[x]` Updated geometry workflow to re-export STL and convert units (`baseline.stl` mm -> `baseline_m.stl` m).
+- `[x]` Debugged snappy failure root cause (`snapControls` parse issue) and restored valid dictionary syntax.
+- `[x]` Rebuilt mesh with corrected setup and verified clean gate pass.
+- `[x]` Extended solver run to 400 iterations for better averaging.
+- `[x]` Computed last-100 window statistics from `forceCoeffs.dat`.
+- `[x]` Updated `cases/test_runs/alpha_8/results.json` with window-averaged coefficients and clean mesh metrics.
+
+### Key Results
+- Mesh (`tefix3`):
+  - `Mesh OK`
+  - `max non-orthogonality = 26.8673`
+  - `max skewness = 1.0`
+- Last-100 (t=301..400) force stats:
+  - `CM_mean = -0.170317` (`std = 0.002636`)
+  - `CD_mean = 0.366488` (`std = 0.000508`)
+  - `CL_mean = 0.472760` (`std = 0.002695`)
+  - `L/D_mean = 1.289974`
+
+### Artifacts Updated This Session
+- `cases/test_runs/alpha_8/system/snappyHexMeshDict` (tuner/debug edits)
+- `cases/test_runs/alpha_8/results.json` (replaced with tefix3 averaged results)
+- `single_angle_full_run_plan.md` (Phase 4B completion/state updates)
+- `SESSION_PROGRESS_LOG.md` (this entry)
+
+### Validation/Evidence
+- `cases/test_runs/alpha_8/log.snappyHexMesh.tefix3`
+- `cases/test_runs/alpha_8/log.checkMesh.tefix3`
+- `cases/test_runs/alpha_8/log.simpleFoam.tefix3_long`
+- `cases/test_runs/alpha_8/postProcessing/forceCoeffs1/0/forceCoeffs.dat`
+
+### Open Items
+- `[ ]` Determine whether large aerodynamic shift vs pre-TE-fix run is expected/acceptable for optimization objectives.
+- `[ ]` Freeze canonical meshing parameters for automated single-angle runner.
+
+### Next Session Suggested Focus
+- Lock final canonical case settings and implement single-angle orchestration script end-to-end.

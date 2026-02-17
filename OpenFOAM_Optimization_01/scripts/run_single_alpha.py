@@ -1,0 +1,496 @@
+#!/usr/bin/env python3
+"""
+Single-angle pipeline runner (incremental build).
+
+Phase 1:
+- Parse CLI arguments
+- Print resolved run configuration
+
+Phase 2:
+- Create a fresh case from template
+- Ensure triSurface directory exists
+- Copy baseline_m STL into case
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import re
+import shutil
+import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+
+
+@dataclass(frozen=True)
+class RunConfig:
+    alpha_deg: float
+    uinf: float
+    case_name: str
+    template_dir: Path
+    cases_root: Path
+    outputs_dir: Path
+    stl_name: str
+    max_skewness: float
+    max_non_orthogonality: float
+    averaging_window: int
+    results_filename: str
+    skip_solver: bool
+    dry_run: bool
+
+    @property
+    def case_dir(self) -> Path:
+        return self.cases_root / self.case_name
+
+    @property
+    def source_stl(self) -> Path:
+        return self.outputs_dir / self.stl_name
+
+    @property
+    def case_stl(self) -> Path:
+        return self.case_dir / "constant" / "triSurface" / self.stl_name
+
+
+def log_step(message: str) -> None:
+    print(f"[run_single_alpha] {message}")
+
+
+def parse_args() -> RunConfig:
+    parser = argparse.ArgumentParser(
+        description="Run single-angle OpenFOAM workflow (incremental implementation)."
+    )
+    parser.add_argument("--alpha", type=float, required=True, help="Angle of attack in degrees.")
+    parser.add_argument("--uinf", type=float, default=25.0, help="Freestream velocity magnitude [m/s].")
+    parser.add_argument(
+        "--case-name",
+        type=str,
+        default="alpha_8_auto",
+        help="Case directory name under cases/test_runs.",
+    )
+    parser.add_argument(
+        "--template-dir",
+        type=Path,
+        default=Path("templates/drone_template"),
+        help="Template case directory.",
+    )
+    parser.add_argument(
+        "--cases-root",
+        type=Path,
+        default=Path("cases/test_runs"),
+        help="Root directory for generated test run cases.",
+    )
+    parser.add_argument(
+        "--outputs-dir",
+        type=Path,
+        default=Path("geometry/outputs"),
+        help="Directory containing geometry export outputs.",
+    )
+    parser.add_argument(
+        "--stl-name",
+        type=str,
+        default="baseline_m.stl",
+        help="STL filename expected in outputs and copied into case.",
+    )
+    parser.add_argument(
+        "--max-skewness",
+        type=float,
+        default=4.0,
+        help="Maximum allowed mesh skewness from checkMesh.",
+    )
+    parser.add_argument(
+        "--max-non-orthogonality",
+        type=float,
+        default=70.0,
+        help="Maximum allowed mesh non-orthogonality from checkMesh.",
+    )
+    parser.add_argument(
+        "--averaging-window",
+        type=int,
+        default=50,
+        help="Number of trailing force-coefficient rows for mean/std (default: 50).",
+    )
+    parser.add_argument(
+        "--results-filename",
+        type=str,
+        default="results.json",
+        help="Output JSON filename written inside case directory.",
+    )
+    parser.add_argument(
+        "--skip-solver",
+        action="store_true",
+        help="Run setup + meshing only; skip simpleFoam.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print planned actions without mutating files.",
+    )
+    args = parser.parse_args()
+
+    return RunConfig(
+        alpha_deg=args.alpha,
+        uinf=args.uinf,
+        case_name=args.case_name,
+        template_dir=args.template_dir,
+        cases_root=args.cases_root,
+        outputs_dir=args.outputs_dir,
+        stl_name=args.stl_name,
+        max_skewness=args.max_skewness,
+        max_non_orthogonality=args.max_non_orthogonality,
+        averaging_window=args.averaging_window,
+        results_filename=args.results_filename,
+        skip_solver=args.skip_solver,
+        dry_run=args.dry_run,
+    )
+
+
+def validate_phase_2_inputs(cfg: RunConfig) -> None:
+    missing = []
+    if not cfg.template_dir.exists():
+        missing.append(f"template_dir missing: {cfg.template_dir}")
+    if not cfg.source_stl.exists():
+        missing.append(f"source STL missing: {cfg.source_stl}")
+    if missing:
+        raise FileNotFoundError(" | ".join(missing))
+
+
+def setup_case_from_template(cfg: RunConfig) -> None:
+    log_step("Phase 2: creating case from template and copying STL")
+    validate_phase_2_inputs(cfg)
+
+    if cfg.dry_run:
+        log_step(f"[dry-run] would remove existing case dir if present: {cfg.case_dir}")
+        log_step(f"[dry-run] would copy template: {cfg.template_dir} -> {cfg.case_dir}")
+        log_step(f"[dry-run] would ensure directory exists: {cfg.case_stl.parent}")
+        log_step(f"[dry-run] would copy STL: {cfg.source_stl} -> {cfg.case_stl}")
+        return
+
+    if cfg.case_dir.exists():
+        shutil.rmtree(cfg.case_dir)
+        log_step(f"Removed existing case directory: {cfg.case_dir}")
+
+    cfg.cases_root.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(cfg.template_dir, cfg.case_dir)
+    log_step(f"Copied template to case: {cfg.case_dir}")
+
+    # Remove Windows metadata/shortcut artifacts that can crash OpenFOAM utilities.
+    removed = 0
+    for path in cfg.case_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        name = path.name
+        if name.lower().endswith(".lnk") or name.endswith(":Zone.Identifier"):
+            path.unlink()
+            removed += 1
+    if removed:
+        log_step(f"Removed {removed} Windows artifact file(s) from case directory")
+
+    cfg.case_stl.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(cfg.source_stl, cfg.case_stl)
+    log_step(f"Copied STL into case: {cfg.case_stl}")
+
+
+def _replace_or_fail(content: str, pattern: str, replacement: str, label: str) -> str:
+    updated, n = re.subn(pattern, replacement, content, flags=re.MULTILINE)
+    if n == 0:
+        raise ValueError(f"Could not find pattern for {label}")
+    return updated
+
+
+def apply_alpha_to_case(cfg: RunConfig) -> None:
+    """Phase 3: apply angle-dependent velocity and force directions."""
+    log_step("Phase 3: applying AoA settings to initialConditions and forceCoeffs")
+
+    angle_rad = math.radians(cfg.alpha_deg)
+    ux = cfg.uinf * math.cos(angle_rad)
+    uz = cfg.uinf * math.sin(angle_rad)
+    drag_x = math.cos(angle_rad)
+    drag_z = math.sin(angle_rad)
+    lift_x = -math.sin(angle_rad)
+    lift_z = math.cos(angle_rad)
+
+    init_file = cfg.case_dir / "0" / "include" / "initialConditions"
+    force_file = cfg.case_dir / "system" / "forceCoeffs"
+
+    if cfg.dry_run:
+        log_step(
+            f"[dry-run] would set flowVelocity=({ux:.6f} 0 {uz:.6f}) in {init_file}"
+        )
+        log_step(
+            f"[dry-run] would set dragDir=({drag_x:.6f} 0 {drag_z:.6f}) and "
+            f"liftDir=({lift_x:.6f} 0 {lift_z:.6f}) in {force_file}"
+        )
+        return
+
+    if not init_file.exists():
+        raise FileNotFoundError(f"Missing initialConditions file: {init_file}")
+    if not force_file.exists():
+        raise FileNotFoundError(f"Missing forceCoeffs file: {force_file}")
+
+    init_content = init_file.read_text()
+    init_content = _replace_or_fail(
+        init_content,
+        r"flowVelocity\s+\([^)]+\);",
+        f"flowVelocity    ({ux:.6f} 0 {uz:.6f});",
+        "flowVelocity",
+    )
+    init_file.write_text(init_content)
+    log_step(f"Updated flowVelocity in {init_file}")
+
+    force_content = force_file.read_text()
+    force_content = _replace_or_fail(
+        force_content,
+        r"dragDir\s+\([^)]+\);",
+        f"dragDir         ({drag_x:.6f} 0 {drag_z:.6f});",
+        "dragDir",
+    )
+    force_content = _replace_or_fail(
+        force_content,
+        r"liftDir\s+\([^)]+\);",
+        f"liftDir         ({lift_x:.6f} 0 {lift_z:.6f});",
+        "liftDir",
+    )
+    force_file.write_text(force_content)
+    log_step(f"Updated liftDir/dragDir in {force_file}")
+
+
+def run_command(cfg: RunConfig, cmd: list[str], log_path: Path) -> None:
+    cmd_str = " ".join(cmd)
+    if cfg.dry_run:
+        log_step(f"[dry-run] would run: {cmd_str} (log: {log_path})")
+        return
+
+    log_step(f"Running: {cmd_str}")
+    with log_path.open("w") as log_file:
+        proc = subprocess.run(
+            cmd,
+            cwd=str(cfg.case_dir),
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=False,
+        )
+    if proc.returncode != 0:
+        raise RuntimeError(f"Command failed ({proc.returncode}): {cmd_str}. See {log_path}")
+
+
+def parse_check_mesh_metrics(check_mesh_log: Path) -> dict[str, float | bool]:
+    text = check_mesh_log.read_text()
+    non_ortho_match = re.search(
+        r"Mesh non-orthogonality Max:\s*([0-9.eE+\-]+)",
+        text,
+    )
+    skew_match = re.search(
+        r"Max skewness\s*=\s*([0-9.eE+\-]+)",
+        text,
+    )
+    mesh_ok = "Mesh OK." in text
+
+    if non_ortho_match is None or skew_match is None:
+        raise RuntimeError(f"Failed to parse checkMesh metrics from {check_mesh_log}")
+
+    return {
+        "mesh_ok": mesh_ok,
+        "max_non_orthogonality": float(non_ortho_match.group(1)),
+        "max_skewness": float(skew_match.group(1)),
+    }
+
+
+def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool] | None:
+    """Phase 4/5: mesh pipeline + solver execution."""
+    log_step("Phase 4: running mesh pipeline")
+
+    run_command(cfg, ["blockMesh"], cfg.case_dir / "log.blockMesh.auto")
+    run_command(cfg, ["surfaceFeatures"], cfg.case_dir / "log.surfaceFeatures.auto")
+    run_command(cfg, ["snappyHexMesh", "-overwrite"], cfg.case_dir / "log.snappyHexMesh.auto")
+    run_command(cfg, ["checkMesh"], cfg.case_dir / "log.checkMesh.auto")
+
+    mesh_metrics: dict[str, float | bool] | None = None
+    if not cfg.dry_run:
+        mesh_metrics = parse_check_mesh_metrics(cfg.case_dir / "log.checkMesh.auto")
+        log_step(
+            "checkMesh metrics: "
+            f"mesh_ok={mesh_metrics['mesh_ok']}, "
+            f"max_non_orthogonality={mesh_metrics['max_non_orthogonality']:.6f}, "
+            f"max_skewness={mesh_metrics['max_skewness']:.6f}"
+        )
+        if not mesh_metrics["mesh_ok"]:
+            raise RuntimeError("Mesh quality gate failed: checkMesh did not report 'Mesh OK.'")
+        if float(mesh_metrics["max_non_orthogonality"]) > cfg.max_non_orthogonality:
+            raise RuntimeError(
+                f"Mesh gate failed: non-orthogonality {mesh_metrics['max_non_orthogonality']} "
+                f"> limit {cfg.max_non_orthogonality}"
+            )
+        if float(mesh_metrics["max_skewness"]) > cfg.max_skewness:
+            raise RuntimeError(
+                f"Mesh gate failed: skewness {mesh_metrics['max_skewness']} "
+                f"> limit {cfg.max_skewness}"
+            )
+
+    if cfg.skip_solver:
+        log_step("Phase 5 skipped (--skip-solver)")
+        return mesh_metrics
+
+    log_step("Phase 5: running solver")
+    run_command(cfg, ["simpleFoam"], cfg.case_dir / "log.simpleFoam.auto")
+    return mesh_metrics
+
+
+def find_force_coeffs_file(case_dir: Path) -> Path:
+    candidates = sorted(case_dir.glob("postProcessing/forceCoeffs*/0/forceCoeffs.dat"))
+    if not candidates:
+        raise FileNotFoundError(
+            f"No force coefficients file found under {case_dir / 'postProcessing'}"
+        )
+    return candidates[-1]
+
+
+def compute_force_stats(force_file: Path, window: int) -> dict[str, float | int]:
+    rows: list[tuple[float, float, float, float]] = []
+    for line in force_file.read_text().splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        parts = s.split()
+        if len(parts) < 4:
+            continue
+        rows.append((float(parts[0]), float(parts[1]), float(parts[2]), float(parts[3])))
+
+    if not rows:
+        raise RuntimeError(f"No numeric rows found in {force_file}")
+
+    tail = rows[-window:] if len(rows) >= window else rows
+
+    def mean(vals: list[float]) -> float:
+        return sum(vals) / len(vals)
+
+    def std(vals: list[float], m: float) -> float:
+        return math.sqrt(sum((v - m) ** 2 for v in vals) / len(vals))
+
+    cm_vals = [r[1] for r in tail]
+    cd_vals = [r[2] for r in tail]
+    cl_vals = [r[3] for r in tail]
+    cm_mean = mean(cm_vals)
+    cd_mean = mean(cd_vals)
+    cl_mean = mean(cl_vals)
+
+    return {
+        "rows": len(tail),
+        "start_time": int(tail[0][0]),
+        "end_time": int(tail[-1][0]),
+        "iterations": int(rows[-1][0]),
+        "CM_mean": cm_mean,
+        "CM_std": std(cm_vals, cm_mean),
+        "CD_mean": cd_mean,
+        "CD_std": std(cd_vals, cd_mean),
+        "CL_mean": cl_mean,
+        "CL_std": std(cl_vals, cl_mean),
+        "L_D_mean": cl_mean / cd_mean if cd_mean != 0 else float("nan"),
+    }
+
+
+def classify_convergence(stats: dict[str, float | int]) -> str:
+    cl_mean = float(stats["CL_mean"])
+    cd_mean = float(stats["CD_mean"])
+    cl_std = float(stats["CL_std"])
+    cd_std = float(stats["CD_std"])
+
+    cl_rel = abs(cl_std / cl_mean) if cl_mean != 0 else float("inf")
+    cd_rel = abs(cd_std / cd_mean) if cd_mean != 0 else float("inf")
+    if cl_rel < 0.01 and cd_rel < 0.005:
+        return "converged"
+    return "quasi_steady"
+
+
+def write_results_json(cfg: RunConfig, mesh_metrics: dict[str, float | bool] | None) -> None:
+    if cfg.dry_run:
+        log_step("[dry-run] would parse force coefficients and write results JSON")
+        return
+    if cfg.skip_solver:
+        log_step("Skipping results output because solver was skipped")
+        return
+
+    force_file = find_force_coeffs_file(cfg.case_dir)
+    stats = compute_force_stats(force_file, cfg.averaging_window)
+    status = classify_convergence(stats)
+
+    payload = {
+        "geometry_id": cfg.stl_name.replace(".stl", ""),
+        "alpha_deg": cfg.alpha_deg,
+        "convergence_status": status,
+        "iterations": stats["iterations"],
+        "averaging_window": {
+            "rows": stats["rows"],
+            "start_time": stats["start_time"],
+            "end_time": stats["end_time"],
+        },
+        "force_coefficients": {
+            "CL_mean": round(float(stats["CL_mean"]), 6),
+            "CL_std": round(float(stats["CL_std"]), 6),
+            "CD_mean": round(float(stats["CD_mean"]), 6),
+            "CD_std": round(float(stats["CD_std"]), 6),
+            "CM_mean": round(float(stats["CM_mean"]), 6),
+            "CM_std": round(float(stats["CM_std"]), 6),
+            "L_D_mean": round(float(stats["L_D_mean"]), 6),
+        },
+        "mesh_quality": {
+            "mesh_ok": bool(mesh_metrics["mesh_ok"]) if mesh_metrics is not None else None,
+            "max_non_orthogonality": (
+                round(float(mesh_metrics["max_non_orthogonality"]), 6)
+                if mesh_metrics is not None
+                else None
+            ),
+            "max_skewness": (
+                round(float(mesh_metrics["max_skewness"]), 6) if mesh_metrics is not None else None
+            ),
+        },
+        "artifacts": {
+            "case_dir": str(cfg.case_dir),
+            "solver_log": str(cfg.case_dir / "log.simpleFoam.auto"),
+            "mesh_log": str(cfg.case_dir / "log.checkMesh.auto"),
+            "force_coeffs_file": str(force_file),
+        },
+        "notes": [
+            "Generated by scripts/run_single_alpha.py",
+            f"Statistics computed from last {cfg.averaging_window} samples.",
+        ],
+    }
+
+    output = cfg.case_dir / cfg.results_filename
+    output.write_text(json.dumps(payload, indent=2))
+    log_step(f"Wrote results: {output}")
+
+
+def print_config(cfg: RunConfig) -> None:
+    log_step("Resolved configuration")
+    print(f"  alpha_deg    : {cfg.alpha_deg}")
+    print(f"  uinf         : {cfg.uinf}")
+    print(f"  case_name    : {cfg.case_name}")
+    print(f"  template_dir : {cfg.template_dir}")
+    print(f"  cases_root   : {cfg.cases_root}")
+    print(f"  case_dir     : {cfg.case_dir}")
+    print(f"  outputs_dir  : {cfg.outputs_dir}")
+    print(f"  source_stl   : {cfg.source_stl}")
+    print(f"  case_stl     : {cfg.case_stl}")
+    print(f"  max_skewness : {cfg.max_skewness}")
+    print(f"  max_non_ortho: {cfg.max_non_orthogonality}")
+    print(f"  avg_window   : {cfg.averaging_window}")
+    print(f"  results_file : {cfg.results_filename}")
+    print(f"  skip_solver  : {cfg.skip_solver}")
+    print(f"  dry_run      : {cfg.dry_run}")
+
+
+def main() -> None:
+    cfg = parse_args()
+    print_config(cfg)
+    setup_case_from_template(cfg)
+    apply_alpha_to_case(cfg)
+    mesh_metrics = run_mesh_and_solver(cfg)
+    write_results_json(cfg, mesh_metrics)
+    log_step("Phase 1+2+3+4+5+6 complete")
+
+
+if __name__ == "__main__":
+    main()

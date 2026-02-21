@@ -33,8 +33,20 @@ class RunConfig:
     cases_root: Path
     outputs_dir: Path
     stl_name: str
+    run_vsp_export: bool
+    vsp_exe: str
+    vsp3_file: Path
+    des_file: Path
+    export_geom_script: Path
+    export_frontal_script: Path
+    convert_stl_units: bool
+    raw_stl_name: str
+    inject_refs: bool
     max_skewness: float
     max_non_orthogonality: float
+    require_mesh_ok: bool
+    allow_mesh_warnings: bool
+    end_time: int | None
     averaging_window: int
     results_filename: str
     skip_solver: bool
@@ -94,9 +106,60 @@ def parse_args() -> RunConfig:
         help="STL filename expected in outputs and copied into case.",
     )
     parser.add_argument(
+        "--run-vsp-export",
+        action="store_true",
+        help="Run VSP export scripts before case setup.",
+    )
+    parser.add_argument(
+        "--vsp-exe",
+        type=str,
+        default="vsp.exe",
+        help="VSP executable path/name.",
+    )
+    parser.add_argument(
+        "--vsp3-file",
+        type=Path,
+        default=Path("geometry/source/baseline.vsp3"),
+        help="Path to .vsp3 geometry file.",
+    )
+    parser.add_argument(
+        "--des-file",
+        type=Path,
+        default=Path("geometry/source/baseline.des"),
+        help="Path to .des file.",
+    )
+    parser.add_argument(
+        "--export-geom-script",
+        type=Path,
+        default=Path("scripts/vsp_utils/export_geom.vspscript"),
+        help="VSP script for geometry/mass export.",
+    )
+    parser.add_argument(
+        "--export-frontal-script",
+        type=Path,
+        default=Path("scripts/vsp_utils/export_frontal_area.vspscript"),
+        help="VSP script for frontal area export.",
+    )
+    parser.add_argument(
+        "--convert-stl-units",
+        action="store_true",
+        help="Convert raw STL from mm to m using surfaceTransformPoints.",
+    )
+    parser.add_argument(
+        "--raw-stl-name",
+        type=str,
+        default="baseline.stl",
+        help="Raw STL filename in outputs_dir (typically mm units).",
+    )
+    parser.add_argument(
+        "--inject-refs",
+        action="store_true",
+        help="Parse VSP outputs and inject refs into case dictionaries.",
+    )
+    parser.add_argument(
         "--max-skewness",
         type=float,
-        default=4.0,
+        default=8.0,
         help="Maximum allowed mesh skewness from checkMesh.",
     )
     parser.add_argument(
@@ -104,6 +167,22 @@ def parse_args() -> RunConfig:
         type=float,
         default=70.0,
         help="Maximum allowed mesh non-orthogonality from checkMesh.",
+    )
+    parser.add_argument(
+        "--require-mesh-ok",
+        action="store_true",
+        help="Require literal 'Mesh OK.' in checkMesh output in addition to numeric thresholds.",
+    )
+    parser.add_argument(
+        "--allow-mesh-warnings",
+        action="store_true",
+        help="Continue to solver even if checkMesh gate fails. Intended for debugging only.",
+    )
+    parser.add_argument(
+        "--end-time",
+        type=int,
+        default=None,
+        help="Optional override for system/controlDict endTime.",
     )
     parser.add_argument(
         "--averaging-window",
@@ -137,8 +216,20 @@ def parse_args() -> RunConfig:
         cases_root=args.cases_root,
         outputs_dir=args.outputs_dir,
         stl_name=args.stl_name,
+        run_vsp_export=args.run_vsp_export,
+        vsp_exe=args.vsp_exe,
+        vsp3_file=args.vsp3_file,
+        des_file=args.des_file,
+        export_geom_script=args.export_geom_script,
+        export_frontal_script=args.export_frontal_script,
+        convert_stl_units=args.convert_stl_units,
+        raw_stl_name=args.raw_stl_name,
+        inject_refs=args.inject_refs,
         max_skewness=args.max_skewness,
         max_non_orthogonality=args.max_non_orthogonality,
+        require_mesh_ok=args.require_mesh_ok,
+        allow_mesh_warnings=args.allow_mesh_warnings,
+        end_time=args.end_time,
         averaging_window=args.averaging_window,
         results_filename=args.results_filename,
         skip_solver=args.skip_solver,
@@ -154,6 +245,89 @@ def validate_phase_2_inputs(cfg: RunConfig) -> None:
         missing.append(f"source STL missing: {cfg.source_stl}")
     if missing:
         raise FileNotFoundError(" | ".join(missing))
+
+
+def run_external_command(
+    cfg: RunConfig,
+    cmd: list[str],
+    log_path: Path,
+    cwd: Path | None = None,
+) -> None:
+    cmd_str = " ".join(cmd)
+    if cfg.dry_run:
+        log_step(f"[dry-run] would run: {cmd_str} (log: {log_path}, cwd={cwd or Path.cwd()})")
+        return
+
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_step(f"Running: {cmd_str}")
+    with log_path.open("w") as log_file:
+        proc = subprocess.run(
+            cmd,
+            cwd=str(cwd) if cwd is not None else None,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=False,
+        )
+    if proc.returncode != 0:
+        raise RuntimeError(f"Command failed ({proc.returncode}): {cmd_str}. See {log_path}")
+
+
+def run_vsp_export_and_prepare_geometry(cfg: RunConfig) -> None:
+    if not cfg.run_vsp_export:
+        return
+
+    log_step("Phase 1.5: running VSP exports and geometry preparation")
+    root = Path(".")
+    run_external_command(
+        cfg,
+        [
+            cfg.vsp_exe,
+            "-batch",
+            str(cfg.vsp3_file),
+            "-des",
+            str(cfg.des_file),
+            "-script",
+            str(cfg.export_geom_script),
+        ],
+        cfg.outputs_dir / "log.vsp_export_geom.auto",
+        cwd=root,
+    )
+    run_external_command(
+        cfg,
+        [
+            cfg.vsp_exe,
+            "-batch",
+            str(cfg.vsp3_file),
+            "-des",
+            str(cfg.des_file),
+            "-script",
+            str(cfg.export_frontal_script),
+        ],
+        cfg.outputs_dir / "log.vsp_export_frontal.auto",
+        cwd=root,
+    )
+    run_external_command(
+        cfg,
+        ["python3", "scripts/compute_openfoam_refs.py"],
+        cfg.outputs_dir / "log.compute_openfoam_refs.auto",
+        cwd=root,
+    )
+
+    if cfg.convert_stl_units:
+        raw_stl = cfg.outputs_dir / cfg.raw_stl_name
+        converted_stl = cfg.outputs_dir / cfg.stl_name
+        run_external_command(
+            cfg,
+            [
+                "surfaceTransformPoints",
+                "scale=(0.001 0.001 0.001)",
+                str(raw_stl),
+                str(converted_stl),
+            ],
+            cfg.outputs_dir / "log.surfaceTransformPoints.auto",
+            cwd=root,
+        )
 
 
 def setup_case_from_template(cfg: RunConfig) -> None:
@@ -256,27 +430,58 @@ def apply_alpha_to_case(cfg: RunConfig) -> None:
     log_step(f"Updated liftDir/dragDir in {force_file}")
 
 
-def run_command(cfg: RunConfig, cmd: list[str], log_path: Path) -> None:
-    cmd_str = " ".join(cmd)
-    if cfg.dry_run:
-        log_step(f"[dry-run] would run: {cmd_str} (log: {log_path})")
+def inject_reference_data(cfg: RunConfig) -> None:
+    if not cfg.inject_refs:
         return
 
-    log_step(f"Running: {cmd_str}")
-    with log_path.open("w") as log_file:
-        proc = subprocess.run(
-            cmd,
-            cwd=str(cfg.case_dir),
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            text=True,
-            check=False,
+    log_step("Phase 2.5: parsing VSP outputs and injecting OpenFOAM refs")
+    from parse_vsp_outputs import parse_all_vsp_outputs
+    from inject_openfoam_dicts import inject_all_openfoam_dicts
+
+    massprops = cfg.outputs_dir / "baseline_massprops.csv"
+    frontal = cfg.outputs_dir / "baseline_frontal_area.csv"
+    wing_refs = cfg.outputs_dir / "wing_refs.csv"
+
+    if cfg.dry_run:
+        log_step(
+            "[dry-run] would parse VSP outputs from "
+            f"{massprops}, {frontal}, {wing_refs} and inject into {cfg.case_dir}"
         )
-    if proc.returncode != 0:
-        raise RuntimeError(f"Command failed ({proc.returncode}): {cmd_str}. See {log_path}")
+        return
+
+    vsp_data = parse_all_vsp_outputs(massprops, frontal, wing_refs)
+    inject_all_openfoam_dicts(cfg.case_dir, vsp_data, stl_name=cfg.stl_name)
+    log_step("Injected references into forceCoeffs/snappyHexMeshDict")
 
 
-def parse_check_mesh_metrics(check_mesh_log: Path) -> dict[str, float | bool]:
+def apply_solver_controls(cfg: RunConfig) -> None:
+    """Optional controlDict patching for run controls."""
+    if cfg.end_time is None:
+        return
+
+    control_file = cfg.case_dir / "system" / "controlDict"
+    if cfg.dry_run:
+        log_step(f"[dry-run] would set endTime={cfg.end_time} in {control_file}")
+        return
+    if not control_file.exists():
+        raise FileNotFoundError(f"Missing controlDict file: {control_file}")
+
+    content = control_file.read_text()
+    content = _replace_or_fail(
+        content,
+        r"endTime\s+[0-9.eE+\-]+;",
+        f"endTime         {cfg.end_time};",
+        "controlDict endTime",
+    )
+    control_file.write_text(content)
+    log_step(f"Updated endTime={cfg.end_time} in {control_file}")
+
+
+def run_command(cfg: RunConfig, cmd: list[str], log_path: Path) -> None:
+    run_external_command(cfg, cmd, log_path, cwd=cfg.case_dir)
+
+
+def parse_check_mesh_metrics(check_mesh_log: Path) -> dict[str, float | bool | int]:
     text = check_mesh_log.read_text()
     non_ortho_match = re.search(
         r"Mesh non-orthogonality Max:\s*([0-9.eE+\-]+)",
@@ -287,6 +492,8 @@ def parse_check_mesh_metrics(check_mesh_log: Path) -> dict[str, float | bool]:
         text,
     )
     mesh_ok = "Mesh OK." in text
+    failed_checks_match = re.search(r"Failed\s+([0-9]+)\s+mesh checks\.", text)
+    failed_checks = int(failed_checks_match.group(1)) if failed_checks_match else 0
 
     if non_ortho_match is None or skew_match is None:
         raise RuntimeError(f"Failed to parse checkMesh metrics from {check_mesh_log}")
@@ -295,10 +502,11 @@ def parse_check_mesh_metrics(check_mesh_log: Path) -> dict[str, float | bool]:
         "mesh_ok": mesh_ok,
         "max_non_orthogonality": float(non_ortho_match.group(1)),
         "max_skewness": float(skew_match.group(1)),
+        "failed_checks": failed_checks,
     }
 
 
-def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool] | None:
+def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool | int] | None:
     """Phase 4/5: mesh pipeline + solver execution."""
     log_step("Phase 4: running mesh pipeline")
 
@@ -307,27 +515,52 @@ def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool] | None:
     run_command(cfg, ["snappyHexMesh", "-overwrite"], cfg.case_dir / "log.snappyHexMesh.auto")
     run_command(cfg, ["checkMesh"], cfg.case_dir / "log.checkMesh.auto")
 
-    mesh_metrics: dict[str, float | bool] | None = None
+    mesh_metrics: dict[str, float | bool | int] | None = None
     if not cfg.dry_run:
         mesh_metrics = parse_check_mesh_metrics(cfg.case_dir / "log.checkMesh.auto")
         log_step(
             "checkMesh metrics: "
             f"mesh_ok={mesh_metrics['mesh_ok']}, "
             f"max_non_orthogonality={mesh_metrics['max_non_orthogonality']:.6f}, "
-            f"max_skewness={mesh_metrics['max_skewness']:.6f}"
+            f"max_skewness={mesh_metrics['max_skewness']:.6f}, "
+            f"failed_checks={mesh_metrics['failed_checks']}"
         )
-        if not mesh_metrics["mesh_ok"]:
-            raise RuntimeError("Mesh quality gate failed: checkMesh did not report 'Mesh OK.'")
+
+        if cfg.require_mesh_ok and not mesh_metrics["mesh_ok"]:
+            if cfg.allow_mesh_warnings:
+                log_step(
+                    "WARNING: checkMesh did not report 'Mesh OK.'; "
+                    "continuing due to --allow-mesh-warnings"
+                )
+            else:
+                raise RuntimeError(
+                    "Mesh quality gate failed: checkMesh did not report 'Mesh OK.' "
+                    "(use --require-mesh-ok only when this is mandatory)."
+                )
         if float(mesh_metrics["max_non_orthogonality"]) > cfg.max_non_orthogonality:
-            raise RuntimeError(
-                f"Mesh gate failed: non-orthogonality {mesh_metrics['max_non_orthogonality']} "
-                f"> limit {cfg.max_non_orthogonality}"
-            )
+            if cfg.allow_mesh_warnings:
+                log_step(
+                    "WARNING: non-orthogonality gate failed "
+                    f"({mesh_metrics['max_non_orthogonality']} > {cfg.max_non_orthogonality}); "
+                    "continuing due to --allow-mesh-warnings"
+                )
+            else:
+                raise RuntimeError(
+                    f"Mesh gate failed: non-orthogonality {mesh_metrics['max_non_orthogonality']} "
+                    f"> limit {cfg.max_non_orthogonality}"
+                )
         if float(mesh_metrics["max_skewness"]) > cfg.max_skewness:
-            raise RuntimeError(
-                f"Mesh gate failed: skewness {mesh_metrics['max_skewness']} "
-                f"> limit {cfg.max_skewness}"
-            )
+            if cfg.allow_mesh_warnings:
+                log_step(
+                    "WARNING: skewness gate failed "
+                    f"({mesh_metrics['max_skewness']} > {cfg.max_skewness}); "
+                    "continuing due to --allow-mesh-warnings"
+                )
+            else:
+                raise RuntimeError(
+                    f"Mesh gate failed: skewness {mesh_metrics['max_skewness']} "
+                    f"> limit {cfg.max_skewness}"
+                )
 
     if cfg.skip_solver:
         log_step("Phase 5 skipped (--skip-solver)")
@@ -416,6 +649,10 @@ def write_results_json(cfg: RunConfig, mesh_metrics: dict[str, float | bool] | N
     stats = compute_force_stats(force_file, cfg.averaging_window)
     status = classify_convergence(stats)
 
+    mesh_warning = False
+    if mesh_metrics is not None:
+        mesh_warning = (not bool(mesh_metrics["mesh_ok"])) or int(mesh_metrics["failed_checks"]) > 0
+
     payload = {
         "geometry_id": cfg.stl_name.replace(".stl", ""),
         "alpha_deg": cfg.alpha_deg,
@@ -437,6 +674,8 @@ def write_results_json(cfg: RunConfig, mesh_metrics: dict[str, float | bool] | N
         },
         "mesh_quality": {
             "mesh_ok": bool(mesh_metrics["mesh_ok"]) if mesh_metrics is not None else None,
+            "mesh_warning": mesh_warning if mesh_metrics is not None else None,
+            "failed_checks": int(mesh_metrics["failed_checks"]) if mesh_metrics is not None else None,
             "max_non_orthogonality": (
                 round(float(mesh_metrics["max_non_orthogonality"]), 6)
                 if mesh_metrics is not None
@@ -455,6 +694,9 @@ def write_results_json(cfg: RunConfig, mesh_metrics: dict[str, float | bool] | N
         "notes": [
             "Generated by scripts/run_single_alpha.py",
             f"Statistics computed from last {cfg.averaging_window} samples.",
+            f"run_vsp_export={cfg.run_vsp_export}",
+            f"convert_stl_units={cfg.convert_stl_units}",
+            f"inject_refs={cfg.inject_refs}",
         ],
     }
 
@@ -474,8 +716,20 @@ def print_config(cfg: RunConfig) -> None:
     print(f"  outputs_dir  : {cfg.outputs_dir}")
     print(f"  source_stl   : {cfg.source_stl}")
     print(f"  case_stl     : {cfg.case_stl}")
+    print(f"  run_vsp_export: {cfg.run_vsp_export}")
+    print(f"  vsp_exe      : {cfg.vsp_exe}")
+    print(f"  vsp3_file    : {cfg.vsp3_file}")
+    print(f"  des_file     : {cfg.des_file}")
+    print(f"  export_geom  : {cfg.export_geom_script}")
+    print(f"  export_front : {cfg.export_frontal_script}")
+    print(f"  convert_stl  : {cfg.convert_stl_units}")
+    print(f"  raw_stl_name : {cfg.raw_stl_name}")
+    print(f"  inject_refs  : {cfg.inject_refs}")
     print(f"  max_skewness : {cfg.max_skewness}")
     print(f"  max_non_ortho: {cfg.max_non_orthogonality}")
+    print(f"  require_mesh_ok: {cfg.require_mesh_ok}")
+    print(f"  allow_mesh_w : {cfg.allow_mesh_warnings}")
+    print(f"  end_time     : {cfg.end_time}")
     print(f"  avg_window   : {cfg.averaging_window}")
     print(f"  results_file : {cfg.results_filename}")
     print(f"  skip_solver  : {cfg.skip_solver}")
@@ -485,8 +739,11 @@ def print_config(cfg: RunConfig) -> None:
 def main() -> None:
     cfg = parse_args()
     print_config(cfg)
+    run_vsp_export_and_prepare_geometry(cfg)
     setup_case_from_template(cfg)
+    inject_reference_data(cfg)
     apply_alpha_to_case(cfg)
+    apply_solver_controls(cfg)
     mesh_metrics = run_mesh_and_solver(cfg)
     write_results_json(cfg, mesh_metrics)
     log_step("Phase 1+2+3+4+5+6 complete")

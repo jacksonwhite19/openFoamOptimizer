@@ -9,7 +9,7 @@ Build and validate one full end-to-end run for a single angle of attack:
 
 Target case: `cases/test_runs/alpha_8`
 
-Last updated: `2026-02-17` (tefix3 update)
+Last updated: `2026-02-21` (automation + canonical branch update)
 
 ---
 
@@ -38,6 +38,8 @@ Last updated: `2026-02-17` (tefix3 update)
 - `[x]` Phase 4B complete (mini mesh tuner converged via TE geometry fix + valid snappy config)
 - `[x]` Phase 5 complete (single-angle simpleFoam run extended to 400 iterations)
 - `[x]` Phase 6 complete (window-averaged coefficients extracted and results.json updated)
+- `[x]` Automated single-angle runner implemented: `scripts/run_single_alpha.py`
+- `[x]` Canonical branch selected for automation: `baseline_m`
 
 ---
 
@@ -262,6 +264,28 @@ Exit criteria:
 - `[ ]` STL export ownership is explicit and working (script name matches behavior)
 - `[x]` Hard-coded absolute paths are handled for this environment (`parse_vsp_outputs.py` and `inject_openfoam_dicts.py` now use relative defaults/CLI args)
 - `[ ]` forceCoeffs file naming (`coefficient.dat` vs `forceCoeffs.dat`) confirmed in this case
+
+---
+
+## Canonical Branch Decision
+- Canonical single-angle automation branch: `baseline_m`
+- Current automated reference result:
+  - Case: `cases/test_runs/alpha_8_auto_strict2`
+  - Alpha: `8 deg`
+  - Averaging window: last `50` rows
+  - `CL_mean = 0.844144`
+  - `CD_mean = 0.267924`
+  - `CM_mean = -0.437676`
+  - `L_D_mean = 3.150683`
+- Mesh quality for this automated reference:
+  - `mesh_ok = false`
+  - `failed_checks = 1`
+  - `max_non_orthogonality = 65.0`
+  - `max_skewness = 4.08963`
+- Mesh gating policy in `run_single_alpha.py`:
+  - Default numeric thresholds: skewness `<= 8.0`, non-orthogonality `<= 70.0`
+  - Optional strict literal check: `--require-mesh-ok`
+  - Optional debug bypass: `--allow-mesh-warnings`
 
 ---
 

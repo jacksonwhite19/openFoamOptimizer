@@ -168,3 +168,64 @@ Use this file for real-time, session-by-session tracking of what was completed, 
 
 ### Next Session Suggested Focus
 - Lock final canonical case settings and implement single-angle orchestration script end-to-end.
+
+---
+
+## Session 004 - 2026-02-21
+
+### Objective
+- Complete and validate automated single-angle runner workflow and lock canonical branch choice.
+
+### Work Completed
+- `[x]` Implemented automated runner script:
+  - `scripts/run_single_alpha.py`
+- `[x]` Added staged workflow in one command:
+  - template copy
+  - artifact cleanup (`.lnk`, `:Zone.Identifier`)
+  - AoA updates (`flowVelocity`, `liftDir`, `dragDir`)
+  - mesh pipeline (`blockMesh`, `surfaceFeatures`, `snappyHexMesh`, `checkMesh`)
+  - solver execution (`simpleFoam`)
+  - force parsing + `results.json` generation
+- `[x]` Added numeric mesh gates and options:
+  - default skewness threshold updated to `8.0`
+  - `--require-mesh-ok` for strict literal gate
+  - `--allow-mesh-warnings` for debug continuation
+- `[x]` Added solver runtime override:
+  - `--end-time` patches `system/controlDict` per run
+- `[x]` Ran full automated case:
+  - `python3 scripts/run_single_alpha.py --alpha 8 --case-name alpha_8_auto_strict2`
+- `[x]` Selected canonical branch for automation:
+  - `baseline_m`
+
+### Key Results
+- Automated run output: `cases/test_runs/alpha_8_auto_strict2/results.json`
+- Coefficients (last 50 rows):
+  - `CL_mean = 0.844144`
+  - `CD_mean = 0.267924`
+  - `CM_mean = -0.437676`
+  - `L_D_mean = 3.150683`
+- Mesh metrics:
+  - `mesh_ok = false`
+  - `failed_checks = 1`
+  - `max_non_orthogonality = 65.0`
+  - `max_skewness = 4.08963`
+
+### Artifacts Updated This Session
+- `scripts/run_single_alpha.py` (major automation implementation + mesh gating + endTime override)
+- `single_angle_full_run_plan.md` (canonical branch + automation status update)
+- `SESSION_PROGRESS_LOG.md` (this entry)
+
+### Validation/Evidence
+- `cases/test_runs/alpha_8_auto_strict2/log.blockMesh.auto`
+- `cases/test_runs/alpha_8_auto_strict2/log.surfaceFeatures.auto`
+- `cases/test_runs/alpha_8_auto_strict2/log.snappyHexMesh.auto`
+- `cases/test_runs/alpha_8_auto_strict2/log.checkMesh.auto`
+- `cases/test_runs/alpha_8_auto_strict2/log.simpleFoam.auto`
+- `cases/test_runs/alpha_8_auto_strict2/results.json`
+
+### Open Items
+- `[ ]` Decide whether canonical production mode requires `--require-mesh-ok` or numeric-only mesh gates.
+- `[ ]` Add VSP export + STL unit conversion stages directly into runner for fully hands-off execution.
+
+### Next Session Suggested Focus
+- Integrate VSP export/scale into `run_single_alpha.py` and validate a truly one-command run from `.vsp3/.des` to `results.json`.

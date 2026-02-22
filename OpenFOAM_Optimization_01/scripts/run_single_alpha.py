@@ -39,6 +39,7 @@ class RunConfig:
     des_file: Path
     export_geom_script: Path
     export_frontal_script: Path
+    wsl_windows_drive: str
     convert_stl_units: bool
     raw_stl_name: str
     inject_refs: bool
@@ -50,6 +51,7 @@ class RunConfig:
     averaging_window: int
     results_filename: str
     skip_solver: bool
+    no_mesh: bool
     dry_run: bool
 
     @property
@@ -106,14 +108,14 @@ def parse_args() -> RunConfig:
         help="STL filename expected in outputs and copied into case.",
     )
     parser.add_argument(
-        "--run-vsp-export",
+        "--skip-vsp-export",
         action="store_true",
-        help="Run VSP export scripts before case setup.",
+        help="Skip VSP export stage (debug only). Default is to run exports each invocation.",
     )
     parser.add_argument(
         "--vsp-exe",
         type=str,
-        default="vsp.exe",
+        default=r"C:\Users\Jackson\Desktop\ZZ_Software Downloads\OpenVSP-3.46.0-win64\vsp.exe",
         help="VSP executable path/name.",
     )
     parser.add_argument(
@@ -141,9 +143,15 @@ def parse_args() -> RunConfig:
         help="VSP script for frontal area export.",
     )
     parser.add_argument(
-        "--convert-stl-units",
+        "--wsl-windows-drive",
+        type=str,
+        default="Z:",
+        help="Windows drive mapping used for WSL paths (e.g. Z: for Z:\\home\\...).",
+    )
+    parser.add_argument(
+        "--skip-convert-stl-units",
         action="store_true",
-        help="Convert raw STL from mm to m using surfaceTransformPoints.",
+        help="Skip STL unit conversion stage (debug only). Default converts mm->m each invocation.",
     )
     parser.add_argument(
         "--raw-stl-name",
@@ -152,9 +160,9 @@ def parse_args() -> RunConfig:
         help="Raw STL filename in outputs_dir (typically mm units).",
     )
     parser.add_argument(
-        "--inject-refs",
+        "--skip-inject-refs",
         action="store_true",
-        help="Parse VSP outputs and inject refs into case dictionaries.",
+        help="Skip VSP ref parsing/injection stage (debug only). Default injects each invocation.",
     )
     parser.add_argument(
         "--max-skewness",
@@ -202,6 +210,11 @@ def parse_args() -> RunConfig:
         help="Run setup + meshing only; skip simpleFoam.",
     )
     parser.add_argument(
+        "--no-mesh",
+        action="store_true",
+        help="Skip all meshing/solver steps (export + setup stages only).",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print planned actions without mutating files.",
@@ -216,15 +229,16 @@ def parse_args() -> RunConfig:
         cases_root=args.cases_root,
         outputs_dir=args.outputs_dir,
         stl_name=args.stl_name,
-        run_vsp_export=args.run_vsp_export,
+        run_vsp_export=(not args.skip_vsp_export),
         vsp_exe=args.vsp_exe,
         vsp3_file=args.vsp3_file,
         des_file=args.des_file,
         export_geom_script=args.export_geom_script,
         export_frontal_script=args.export_frontal_script,
-        convert_stl_units=args.convert_stl_units,
+        wsl_windows_drive=args.wsl_windows_drive,
+        convert_stl_units=(not args.skip_convert_stl_units),
         raw_stl_name=args.raw_stl_name,
-        inject_refs=args.inject_refs,
+        inject_refs=(not args.skip_inject_refs),
         max_skewness=args.max_skewness,
         max_non_orthogonality=args.max_non_orthogonality,
         require_mesh_ok=args.require_mesh_ok,
@@ -233,6 +247,7 @@ def parse_args() -> RunConfig:
         averaging_window=args.averaging_window,
         results_filename=args.results_filename,
         skip_solver=args.skip_solver,
+        no_mesh=args.no_mesh,
         dry_run=args.dry_run,
     )
 
@@ -252,11 +267,12 @@ def run_external_command(
     cmd: list[str],
     log_path: Path,
     cwd: Path | None = None,
-) -> None:
+    allow_nonzero: bool = False,
+) -> int:
     cmd_str = " ".join(cmd)
     if cfg.dry_run:
         log_step(f"[dry-run] would run: {cmd_str} (log: {log_path}, cwd={cwd or Path.cwd()})")
-        return
+        return 0
 
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_step(f"Running: {cmd_str}")
@@ -270,7 +286,54 @@ def run_external_command(
             check=False,
         )
     if proc.returncode != 0:
+        if allow_nonzero:
+            log_step(
+                f"WARNING: command returned {proc.returncode} but continuing: {cmd_str}"
+            )
+            return proc.returncode
         raise RuntimeError(f"Command failed ({proc.returncode}): {cmd_str}. See {log_path}")
+    return proc.returncode
+
+
+def to_windows_path(path: Path, wsl_windows_drive: str = "Z:") -> str:
+    raw = str(path)
+
+    # Already a Windows path (e.g., Z:\foo or Z:/foo) -> keep as-is.
+    if re.match(r"^[A-Za-z]:[\\/]", raw):
+        return raw
+
+    # Normalize relative paths against current working directory first.
+    p = Path(raw)
+    if not p.is_absolute():
+        p = (Path.cwd() / p).resolve()
+        raw = str(p)
+
+    # Fallback for non-WSL execution contexts.
+    if raw.startswith("/mnt/") and len(raw) > 6:
+        drive = raw[5].upper()
+        rest = raw[6:].replace("/", "\\")
+        return f"{drive}:{rest}"
+    if raw.startswith("/home/"):
+        rest = raw[1:].replace("/", "\\")
+        return f"{wsl_windows_drive}\\{rest}"
+    # Handle UNC form emitted in some Windows-hosted Python executions.
+    unc_marker = "\\\\wsl.localhost\\Ubuntu-22.04\\home\\"
+    if raw.startswith(unc_marker):
+        rest = raw[len("\\\\wsl.localhost\\Ubuntu-22.04\\"):].replace("/", "\\")
+        return f"{wsl_windows_drive}\\{rest}"
+    wslpath = shutil.which("wslpath")
+    if wslpath:
+        proc = subprocess.run(
+            [wslpath, "-w", raw],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if proc.returncode == 0:
+            return proc.stdout.strip()
+        raise RuntimeError(f"Failed to convert path to Windows format: {path}\n{proc.stderr}")
+    return raw
 
 
 def run_vsp_export_and_prepare_geometry(cfg: RunConfig) -> None:
@@ -279,34 +342,83 @@ def run_vsp_export_and_prepare_geometry(cfg: RunConfig) -> None:
 
     log_step("Phase 1.5: running VSP exports and geometry preparation")
     root = Path(".")
-    run_external_command(
+    vsp_exe_path = Path(cfg.vsp_exe)
+    if not vsp_exe_path.exists():
+        wslpath = shutil.which("wslpath")
+        if wslpath:
+            proc = subprocess.run(
+                [wslpath, "-u", cfg.vsp_exe],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=False,
+            )
+            if proc.returncode == 0:
+                vsp_exe_path = Path(proc.stdout.strip())
+    if not vsp_exe_path.exists():
+        raise FileNotFoundError(f"Could not resolve vsp.exe path: {cfg.vsp_exe}")
+    vsp_cwd = vsp_exe_path.parent
+    vsp3_win = to_windows_path(cfg.vsp3_file, cfg.wsl_windows_drive)
+    des_win = to_windows_path(cfg.des_file, cfg.wsl_windows_drive)
+    geom_script_win = to_windows_path(cfg.export_geom_script, cfg.wsl_windows_drive)
+    frontal_script_win = to_windows_path(cfg.export_frontal_script, cfg.wsl_windows_drive)
+    geom_rc = run_external_command(
         cfg,
         [
-            cfg.vsp_exe,
+            str(vsp_exe_path),
             "-batch",
-            str(cfg.vsp3_file),
+            vsp3_win,
             "-des",
-            str(cfg.des_file),
+            des_win,
             "-script",
-            str(cfg.export_geom_script),
+            geom_script_win,
         ],
         cfg.outputs_dir / "log.vsp_export_geom.auto",
-        cwd=root,
+        cwd=vsp_cwd,
+        allow_nonzero=True,
     )
-    run_external_command(
+    frontal_rc = run_external_command(
         cfg,
         [
-            cfg.vsp_exe,
+            str(vsp_exe_path),
             "-batch",
-            str(cfg.vsp3_file),
+            vsp3_win,
             "-des",
-            str(cfg.des_file),
+            des_win,
             "-script",
-            str(cfg.export_frontal_script),
+            frontal_script_win,
         ],
         cfg.outputs_dir / "log.vsp_export_frontal.auto",
-        cwd=root,
+        cwd=vsp_cwd,
+        allow_nonzero=True,
     )
+
+    if not cfg.dry_run:
+        raw_stl = cfg.outputs_dir / cfg.raw_stl_name
+        if not raw_stl.exists():
+            raise FileNotFoundError(
+                f"Expected raw STL missing after VSP export: {raw_stl}"
+            )
+        massprops = cfg.outputs_dir / "baseline_massprops.csv"
+        frontal = cfg.outputs_dir / "baseline_frontal_area.csv"
+        if not massprops.exists():
+            raise FileNotFoundError(
+                f"Expected massprops CSV missing after VSP export: {massprops}"
+            )
+        if not frontal.exists():
+            raise FileNotFoundError(
+                f"Expected frontal area CSV missing after VSP export: {frontal}"
+            )
+        if geom_rc != 0:
+            log_step(
+                f"WARNING: geometry export returned code {geom_rc}, "
+                "but expected STL/massprops files were present."
+            )
+        if frontal_rc != 0:
+            log_step(
+                f"WARNING: frontal export returned code {frontal_rc}, "
+                "but expected frontal-area file was present."
+            )
     run_external_command(
         cfg,
         ["python3", "scripts/compute_openfoam_refs.py"],
@@ -733,6 +845,7 @@ def print_config(cfg: RunConfig) -> None:
     print(f"  avg_window   : {cfg.averaging_window}")
     print(f"  results_file : {cfg.results_filename}")
     print(f"  skip_solver  : {cfg.skip_solver}")
+    print(f"  no_mesh      : {cfg.no_mesh}")
     print(f"  dry_run      : {cfg.dry_run}")
 
 
@@ -744,6 +857,10 @@ def main() -> None:
     inject_reference_data(cfg)
     apply_alpha_to_case(cfg)
     apply_solver_controls(cfg)
+    if cfg.no_mesh:
+        log_step("Phase 4+5 skipped (--no-mesh)")
+        log_step("Phase 1.5+2+2.5+3 complete")
+        return
     mesh_metrics = run_mesh_and_solver(cfg)
     write_results_json(cfg, mesh_metrics)
     log_step("Phase 1+2+3+4+5+6 complete")

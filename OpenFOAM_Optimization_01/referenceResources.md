@@ -16,3 +16,9 @@ python3 scripts/run_single_alpha.py --alpha 8 --case-name alpha_8_full_iter001 -
 
 ## Export/setup only (no meshing/solver)
 python3 scripts/run_single_alpha.py --alpha 8 --case-name alpha_8_export_only --no-mesh
+
+## Alpha sweep (0 to 12 deg, step 2, endTime 300)
+bash scripts/run_sweep.sh
+
+## Alpha sweep (0 to 12 deg, step 3, endTime 300)
+bash scripts/run_sweep.sh --step 3

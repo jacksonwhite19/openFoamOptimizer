@@ -51,6 +51,8 @@ class RunConfig:
     averaging_window: int
     results_filename: str
     skip_solver: bool
+    skip_mesh: bool
+    mesh_source_case: Path | None
     no_mesh: bool
     dry_run: bool
 
@@ -210,6 +212,17 @@ def parse_args() -> RunConfig:
         help="Run setup + meshing only; skip simpleFoam.",
     )
     parser.add_argument(
+        "--skip-mesh",
+        action="store_true",
+        help="Skip meshing and run solver using mesh copied from --mesh-source-case.",
+    )
+    parser.add_argument(
+        "--mesh-source-case",
+        type=Path,
+        default=None,
+        help="Case directory to copy constant/polyMesh from when using --skip-mesh.",
+    )
+    parser.add_argument(
         "--no-mesh",
         action="store_true",
         help="Skip all meshing/solver steps (export + setup stages only).",
@@ -247,6 +260,8 @@ def parse_args() -> RunConfig:
         averaging_window=args.averaging_window,
         results_filename=args.results_filename,
         skip_solver=args.skip_solver,
+        skip_mesh=args.skip_mesh,
+        mesh_source_case=args.mesh_source_case,
         no_mesh=args.no_mesh,
         dry_run=args.dry_run,
     )
@@ -593,6 +608,26 @@ def run_command(cfg: RunConfig, cmd: list[str], log_path: Path) -> None:
     run_external_command(cfg, cmd, log_path, cwd=cfg.case_dir)
 
 
+def copy_mesh_from_source_case(cfg: RunConfig) -> None:
+    if cfg.mesh_source_case is None:
+        raise ValueError("--skip-mesh requires --mesh-source-case")
+
+    src_poly = cfg.mesh_source_case / "constant" / "polyMesh"
+    dst_poly = cfg.case_dir / "constant" / "polyMesh"
+
+    if not src_poly.exists():
+        raise FileNotFoundError(f"Source mesh missing: {src_poly}")
+
+    if cfg.dry_run:
+        log_step(f"[dry-run] would copy mesh: {src_poly} -> {dst_poly}")
+        return
+
+    if dst_poly.exists():
+        shutil.rmtree(dst_poly)
+    shutil.copytree(src_poly, dst_poly)
+    log_step(f"Copied mesh from source case: {src_poly} -> {dst_poly}")
+
+
 def parse_check_mesh_metrics(check_mesh_log: Path) -> dict[str, float | bool | int]:
     text = check_mesh_log.read_text()
     non_ortho_match = re.search(
@@ -845,6 +880,8 @@ def print_config(cfg: RunConfig) -> None:
     print(f"  avg_window   : {cfg.averaging_window}")
     print(f"  results_file : {cfg.results_filename}")
     print(f"  skip_solver  : {cfg.skip_solver}")
+    print(f"  skip_mesh    : {cfg.skip_mesh}")
+    print(f"  mesh_source  : {cfg.mesh_source_case}")
     print(f"  no_mesh      : {cfg.no_mesh}")
     print(f"  dry_run      : {cfg.dry_run}")
 
@@ -860,6 +897,17 @@ def main() -> None:
     if cfg.no_mesh:
         log_step("Phase 4+5 skipped (--no-mesh)")
         log_step("Phase 1.5+2+2.5+3 complete")
+        return
+    if cfg.skip_mesh:
+        log_step("Phase 4 skipped (--skip-mesh)")
+        copy_mesh_from_source_case(cfg)
+        if cfg.skip_solver:
+            log_step("Phase 5 skipped (--skip-solver)")
+            return
+        log_step("Phase 5: running solver")
+        run_command(cfg, ["simpleFoam"], cfg.case_dir / "log.simpleFoam.auto")
+        write_results_json(cfg, mesh_metrics=None)
+        log_step("Phase 1.5+2+2.5+3+5 complete (mesh reused)")
         return
     mesh_metrics = run_mesh_and_solver(cfg)
     write_results_json(cfg, mesh_metrics)

@@ -129,8 +129,8 @@ def parse_args() -> OptConfig:
     parser.add_argument(
         "--mesh-cores",
         type=int,
-        default=1,
-        help="Parallel snappyHexMesh cores for candidates (default: 1).",
+        default=8,
+        help="Parallel snappyHexMesh cores for candidates (default: 8).",
     )
     parser.add_argument(
         "--strategy",

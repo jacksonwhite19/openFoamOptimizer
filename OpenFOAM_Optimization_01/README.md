@@ -41,6 +41,22 @@ Expose it from Windows:
 ngrok http 8000
 ```
 
+## Raw Log Tail
+Follow raw log output across phases/iterations/sweeps:
+```bash
+python3 scripts/tail_raw_output.py --latest
+```
+
+Follow a specific run or case:
+```bash
+python3 scripts/tail_raw_output.py --run-id 20260222_171452
+python3 scripts/tail_raw_output.py --path cases/test_runs/alpha_8_parallel_test
+```
+
+Include existing content from the start:
+```bash
+python3 scripts/tail_raw_output.py --latest --from-start
+```
 ## Common Utilities
 Single sweep (0→12 deg, step 3, endTime 300):
 ```bash

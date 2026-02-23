@@ -56,6 +56,806 @@
         "sweep_retries": 0,
         "timeout_sweep_sec": null
       }
+    },
+    "22cd24c9c9dfd7b736169b52f43088352424ba8747d6eacf31b976c0a87db5f6": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0001/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0001/metadata.json",
+      "candidate_id": "iter_0001",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:28:54",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0001.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "1ef6a8a60dc0f08ad287946a32825921012cb4b1caed01236cac44174fe08d60": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0002/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0002/metadata.json",
+      "candidate_id": "iter_0002",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:28:58",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0002.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "f3b12c675abf96524719d730b30f9b6cbf77f420e5c8990511d9f56f4184beff": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0003/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0003/metadata.json",
+      "candidate_id": "iter_0003",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:01",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0003.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "405cbda423297ecbbb72432342cb66bb96495f4f8172813a0ee5dadc8bd773c9": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0004/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0004/metadata.json",
+      "candidate_id": "iter_0004",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:05",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0004.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "fedbd1d5bd7ea5643d71bfcbef64a265f26a46c35defe77430e17d48d9e1e255": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0005/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0005/metadata.json",
+      "candidate_id": "iter_0005",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:08",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0005.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "87aff1b9425af854757484ed2f1ef0f1768c5d1935baad0c1d47eeb245e00c22": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0006/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0006/metadata.json",
+      "candidate_id": "iter_0006",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:11",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0006.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "4e0b200b9b70806bcefd9dc46faeeaa89d9e4c81e7d9420f02f94fb63cf1826c": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0007/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0007/metadata.json",
+      "candidate_id": "iter_0007",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:15",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0007.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "4e65c53ac591cba32d417b28d2e5ab77a0f25c019ba3ee99656a4666feeaf1cc": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0008/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0008/metadata.json",
+      "candidate_id": "iter_0008",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:18",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0008.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "3e9b220693a1204155355b273ca17636c40f2c86260dcf9c506747a54f74031c": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0009/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0009/metadata.json",
+      "candidate_id": "iter_0009",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:22",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0009.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "78a94d84d1891df0f43cae0afa1c7d92d80564cd230accf651dcf46fadd7e31a": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0010/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0010/metadata.json",
+      "candidate_id": "iter_0010",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:25",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0010.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "8286d9583d52949c7e12076bc234f8202fc566279361b4f64fe5fb2ddf063ece": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0011/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0011/metadata.json",
+      "candidate_id": "iter_0011",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:28",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0011.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "790fb39e2fc4e4ec950c066c9885db263303391a259db5a1fb186874780a514c": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0012/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0012/metadata.json",
+      "candidate_id": "iter_0012",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:32",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0012.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "4663cbf8418d8a1a3e8e77943cdeee3a30dd8ec4c5396c45af52009413c01a67": {
+      "evaluation_json": "results/optimizer_runs/20260222_202851/iter_0013/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_202851/iter_0013/metadata.json",
+      "candidate_id": "iter_0013",
+      "run_id": "20260222_202851",
+      "timestamp": "2026-02-22T20:29:35",
+      "design_json": "results/optimizer_runs/20260222_202851/designs/iter_0013.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "7fcb04eb32ce42ec8256ac9e2b1a454140d9617560b005f10a8f2928c421b502": {
+      "evaluation_json": "results/optimizer_runs/20260222_203623/iter_0014/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_203623/iter_0014/metadata.json",
+      "candidate_id": "iter_0014",
+      "run_id": "20260222_203623",
+      "timestamp": "2026-02-22T20:36:31",
+      "design_json": "results/optimizer_runs/20260222_203623/designs/iter_0014.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "f52e1f4c9424d76a963699840e9867a2f549ebce4d97bace58bedfb4804aaae1": {
+      "evaluation_json": "results/optimizer_runs/20260222_203623/iter_0015/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_203623/iter_0015/metadata.json",
+      "candidate_id": "iter_0015",
+      "run_id": "20260222_203623",
+      "timestamp": "2026-02-22T20:36:38",
+      "design_json": "results/optimizer_runs/20260222_203623/designs/iter_0015.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "aa9dde6e5647352f2f5e99988b21a65de5a24bb4105090d7a3bfef33cc1d3bfe": {
+      "evaluation_json": "results/optimizer_runs/20260222_203623/iter_0016/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_203623/iter_0016/metadata.json",
+      "candidate_id": "iter_0016",
+      "run_id": "20260222_203623",
+      "timestamp": "2026-02-22T20:36:46",
+      "design_json": "results/optimizer_runs/20260222_203623/designs/iter_0016.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "a9ae6bb5cd4043d71e88361e98a6f31f885b77f1989faa690cc91fbf177c30f2": {
+      "evaluation_json": "results/optimizer_runs/20260222_203623/iter_0017/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_203623/iter_0017/metadata.json",
+      "candidate_id": "iter_0017",
+      "run_id": "20260222_203623",
+      "timestamp": "2026-02-22T20:36:54",
+      "design_json": "results/optimizer_runs/20260222_203623/designs/iter_0017.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "c736a63c1d26357d7ffe911f359ba29a4520dbd94346f10efb725e0970854a5b": {
+      "evaluation_json": "results/optimizer_runs/20260222_203623/iter_0018/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_203623/iter_0018/metadata.json",
+      "candidate_id": "iter_0018",
+      "run_id": "20260222_203623",
+      "timestamp": "2026-02-22T20:37:01",
+      "design_json": "results/optimizer_runs/20260222_203623/designs/iter_0018.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "bfa962bb91dd75f8f6650b1feea7c22ce5931b8920dd801a4090dd59f3ab892a": {
+      "evaluation_json": "results/optimizer_runs/20260222_203623/iter_0019/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_203623/iter_0019/metadata.json",
+      "candidate_id": "iter_0019",
+      "run_id": "20260222_203623",
+      "timestamp": "2026-02-22T20:37:09",
+      "design_json": "results/optimizer_runs/20260222_203623/designs/iter_0019.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "da8af5cf6e430cd38b61e4ed5e71c0272feb52661c2ac4b26ec9111e9af7a258": {
+      "evaluation_json": "results/optimizer_runs/20260222_203623/iter_0020/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_203623/iter_0020/metadata.json",
+      "candidate_id": "iter_0020",
+      "run_id": "20260222_203623",
+      "timestamp": "2026-02-22T20:37:17",
+      "design_json": "results/optimizer_runs/20260222_203623/designs/iter_0020.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 16,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "e2a86bfd78d7482377d720500ab4dc91d5e5ad8109e694c1823da933ac0c37f2": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0001/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0001/metadata.json",
+      "candidate_id": "iter_0001",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-22T21:10:34",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0001.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "56ce7b8d390127ebe683cf15fcbd474b2e2baf6b5c039a9e45d40d88b6c3f7e3": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0002/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0002/metadata.json",
+      "candidate_id": "iter_0002",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-22T21:40:07",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0002.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "4392a297c360bf0e3cb4416868922ad0f2078fc111bffbfd92c1898c61063307": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0003/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0003/metadata.json",
+      "candidate_id": "iter_0003",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-22T22:09:19",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0003.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "6b59c505c0479cac7e1c7cd28e7025135aff6fc2a7f2f61a25d907d204e58f5f": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0004/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0004/metadata.json",
+      "candidate_id": "iter_0004",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-22T22:38:23",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0004.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "baff8f699eb9f8e91dd01017bd42ea1873b36f9bb652d6bcb86d014677c65158": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0005/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0005/metadata.json",
+      "candidate_id": "iter_0005",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-22T23:07:38",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0005.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "39b16c22a2758c7f361268e324f83eef6679b6fea2859b2ff0c1b25a706b2f71": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0006/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0006/metadata.json",
+      "candidate_id": "iter_0006",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-22T23:36:51",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0006.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "9f277a465f0df2f89fb3baf3eac64bdf0c4d0b5dff7b57f03556ecae99832e3a": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0007/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0007/metadata.json",
+      "candidate_id": "iter_0007",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T00:06:01",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0007.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "c9d62ddd133437fddcaa72a14a30b4fa3221e5eacf7b4c5299c9e27189481839": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0008/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0008/metadata.json",
+      "candidate_id": "iter_0008",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T00:35:11",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0008.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "4689f1daf1112026994d33bb616125968716141d859165640b6ec56bc323db89": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0009/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0009/metadata.json",
+      "candidate_id": "iter_0009",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T01:04:28",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0009.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "1301497182bf8b8077280f0f1a07fcfc2c699e91660dbae15c6fd90f8e09ec58": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0010/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0010/metadata.json",
+      "candidate_id": "iter_0010",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T01:33:41",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0010.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "e61e99049ee13669744ba4b5e8321566ecd7afd54a2d6f5da38b63c06ec67825": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0011/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0011/metadata.json",
+      "candidate_id": "iter_0011",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T02:02:56",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0011.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "8494e9f51df280801a2d4dae631756815a2c0a3d4f3a798759c6ed5b1c71bb48": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0012/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0012/metadata.json",
+      "candidate_id": "iter_0012",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T02:32:17",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0012.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "49d8e4a615c758f15694a7c0efd82925a92239a294ae4debaf9926be4fd86f06": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0013/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0013/metadata.json",
+      "candidate_id": "iter_0013",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T03:01:40",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0013.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "20dee60f4f04979086773b30a931095f6bfffe2d785b29dc15dd74240aa60c56": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0014/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0014/metadata.json",
+      "candidate_id": "iter_0014",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T03:30:54",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0014.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "8b5426439a0c6fa56eb629a64f01e8feb66eb333a4cb0b8ca883eb079bb55435": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0015/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0015/metadata.json",
+      "candidate_id": "iter_0015",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T04:00:19",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0015.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "c80f4342e3b5e59cc66c68b2ceeeef953e60f1c320e3f344b2b38b79eeac8e6e": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0016/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0016/metadata.json",
+      "candidate_id": "iter_0016",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T04:29:35",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0016.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "497f254f482e575adbaf6216018625f5bc465cdae222b75f4f9f3a1f6d3453b5": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0017/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0017/metadata.json",
+      "candidate_id": "iter_0017",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T04:58:49",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0017.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "615ed0ceb3cc864fb626007c96f6e5d511fbc96de8ac7a4c1beb4b8808cbce5e": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0018/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0018/metadata.json",
+      "candidate_id": "iter_0018",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T05:28:01",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0018.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "fa6677cb920ebbc33a1c1daac522de8d31862125e815cad6b155020b3e04b775": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0019/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0019/metadata.json",
+      "candidate_id": "iter_0019",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T05:57:28",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0019.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "fbc729ee5839a45f33e7f39a847f9788caf77e71cada5b0055c4550f73c53a11": {
+      "evaluation_json": "results/optimizer_runs/20260222_204056/iter_0020/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_204056/iter_0020/metadata.json",
+      "candidate_id": "iter_0020",
+      "run_id": "20260222_204056",
+      "timestamp": "2026-02-23T06:26:39",
+      "design_json": "results/optimizer_runs/20260222_204056/designs/iter_0020.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
     }
   }
 }

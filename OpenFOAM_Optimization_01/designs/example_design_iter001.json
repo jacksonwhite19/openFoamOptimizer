@@ -1,10 +1,9 @@
 {
-  "wing_half_span_m": 0.360546,
-  "wing_sweep_deg": 27.7172,
-  "wing_taper_ratio": 0.58606,
-  "wing_root_chord_m": 0.2,
-  "wing_x_location_m": 0.214824,
-  "aileron_length_c_start": 0.22,
-  "tail_root_chord_m": 0.1,
-  "tail_sweep_deg": 25.0
+  "span_mm": 320.55,
+  "sweep_deg": 24.69,
+  "xloc_mm": 235.44,
+  "taper": 0.713,
+  "tip_mm": 119.30,
+  "ctrl_frac": 0.22,
+  "fin_sweep_deg": 43.58
 }

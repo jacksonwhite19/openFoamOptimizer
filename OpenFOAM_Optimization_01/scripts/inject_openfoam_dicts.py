@@ -29,28 +29,42 @@ def inject_force_coeffs(
     
     content = force_coeffs_path.read_text()
     
-    # Update CenterOfRotation (CG in OpenFOAM coordinate system)
+    # Update CG reference (OpenFOAM forceCoeffs usually uses CofR)
     # VSP: +X forward, +Y right, +Z up
     # OpenFOAM: +X streamwise, +Y lateral, +Z vertical (same conventions)
-    cg_pattern = r'CenterOfRotation\s+\([^)]+\);'
-    cg_replacement = f'CenterOfRotation  ({vsp_data["cg_x"]:.6f} {vsp_data["cg_y"]:.6f} {vsp_data["cg_z"]:.6f});'
-    content = re.sub(cg_pattern, cg_replacement, content)
+    cg_value = f'({vsp_data["cg_x"]:.6f} {vsp_data["cg_y"]:.6f} {vsp_data["cg_z"]:.6f})'
+    cg_patterns = [
+        (r'CenterOfRotation\s+\([^)]+\);', f'CenterOfRotation  {cg_value};'),
+        (r'CofR\s+\([^)]+\);', f'CofR            {cg_value};'),
+    ]
+    for pattern, replacement in cg_patterns:
+        if re.search(pattern, content):
+            content = re.sub(pattern, replacement, content)
     
     # Update Aref (reference area)
     aref_pattern = r'Aref\s+[^;]+;'
     aref_replacement = f'Aref            {vsp_data["area_ref"]:.6f};'
     content = re.sub(aref_pattern, aref_replacement, content)
     
-    # Update lref (reference chord)
-    lref_pattern = r'lref\s+[^;]+;'
-    lref_replacement = f'lref            {vsp_data["chord_ref"]:.6f};'
-    content = re.sub(lref_pattern, lref_replacement, content)
+    # Update lref/lRef (reference chord)
+    lref_replacement = f'lRef            {vsp_data["chord_ref"]:.6f};'
+    lref_patterns = [
+        r'lref\s+[^;]+;',
+        r'lRef\s+[^;]+;',
+    ]
+    for pattern in lref_patterns:
+        if re.search(pattern, content):
+            content = re.sub(pattern, lref_replacement, content)
     
     # Update bref (reference span) - optional, not always in forceCoeffs
-    bref_pattern = r'bref\s+[^;]+;'
-    if re.search(bref_pattern, content):
-        bref_replacement = f'bref            {vsp_data["span_ref"]:.6f};'
-        content = re.sub(bref_pattern, bref_replacement, content)
+    bref_patterns = [
+        r'bref\s+[^;]+;',
+        r'bRef\s+[^;]+;',
+    ]
+    for pattern in bref_patterns:
+        if re.search(pattern, content):
+            bref_replacement = f'bRef            {vsp_data["span_ref"]:.6f};'
+            content = re.sub(pattern, bref_replacement, content)
     
     # Write updated content
     force_coeffs_path.write_text(content)

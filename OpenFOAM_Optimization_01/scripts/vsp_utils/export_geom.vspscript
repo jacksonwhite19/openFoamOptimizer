@@ -7,7 +7,7 @@ void main()
     string vsp_file = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/source/baseline.vsp3";
     ReadVSPFile(vsp_file);
 
-    string des_file = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/source/baseline.des";
+    string des_file = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/source/current.des";
     ReadApplyDESFile(des_file);
 
     Update(); // initial update

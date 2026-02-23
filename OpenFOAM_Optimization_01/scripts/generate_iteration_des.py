@@ -142,8 +142,7 @@ def build_des_updates(problem: dict[str, Any], design_values: dict[str, float]) 
     var_map = {v["name"]: v for v in problem.get("design_variables", [])}
     updates: dict[str, float] = {}
 
-    for name, val in design_values.items():
-        meta = var_map[name]
+    for name, meta in var_map.items():
         binding = meta.get("des_binding")
         if not binding:
             continue
@@ -153,8 +152,12 @@ def build_des_updates(problem: dict[str, Any], design_values: dict[str, float]) 
         param_ids = binding.get("param_ids", [])
 
         if mode == "direct":
-            des_value = val * scale
+            if name not in design_values:
+                continue
+            des_value = float(design_values[name]) * scale
         elif mode == "derived_tip_from_root_and_taper":
+            if name not in design_values:
+                continue
             deps = binding.get("depends_on", [])
             if len(deps) != 1:
                 raise ValueError(f"Binding for '{name}' must define one depends_on variable")
@@ -164,7 +167,17 @@ def build_des_updates(problem: dict[str, Any], design_values: dict[str, float]) 
                     f"Binding for '{name}' requires '{dep_name}' in provided design values"
                 )
             taper = float(design_values[dep_name])
-            des_value = (val * taper) * scale
+            des_value = (float(design_values[name]) * taper) * scale
+        elif mode == "copy_from":
+            deps = binding.get("depends_on", [])
+            if len(deps) != 1:
+                raise ValueError(f"Binding for '{name}' must define one depends_on variable")
+            dep_name = deps[0]
+            if dep_name not in design_values:
+                raise KeyError(
+                    f"Binding for '{name}' requires '{dep_name}' in provided design values"
+                )
+            des_value = float(design_values[dep_name]) * scale
         else:
             raise ValueError(f"Unsupported des_binding mode '{mode}' for variable '{name}'")
 
@@ -217,4 +230,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

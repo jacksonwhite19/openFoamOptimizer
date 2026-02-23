@@ -183,8 +183,8 @@ def parse_args() -> RunConfig:
     parser.add_argument(
         "--mesh-cores",
         type=int,
-        default=1,
-        help="Number of cores for parallel snappyHexMesh (default: 1).",
+        default=8,
+        help="Number of cores for parallel snappyHexMesh (default: 8).",
     )
     parser.add_argument(
         "--require-mesh-ok",
@@ -473,6 +473,19 @@ def run_vsp_export_and_prepare_geometry(cfg: RunConfig) -> None:
         )
 
 
+def ensure_current_des(cfg: RunConfig) -> None:
+    root = Path(".")
+    current_des = root / "geometry" / "source" / "current.des"
+    if cfg.dry_run:
+        log_step(f"[dry-run] would update current DES: {current_des}")
+        return
+    if not cfg.des_file.exists():
+        raise FileNotFoundError(f"DES file not found: {cfg.des_file}")
+    current_des.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(cfg.des_file, current_des)
+    log_step(f"Updated current DES: {current_des}")
+
+
 def setup_case_from_template(cfg: RunConfig) -> None:
     log_step("Phase 2: creating case from template and copying STL")
     validate_phase_2_inputs(cfg)
@@ -740,6 +753,7 @@ def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool | int] | None:
 
     run_command(cfg, ["blockMesh"], cfg.case_dir / "log.blockMesh.auto")
     run_command(cfg, ["surfaceFeatures"], cfg.case_dir / "log.surfaceFeatures.auto")
+    solver_cores = cfg.mesh_cores if cfg.mesh_cores > 0 else 1
     if cfg.mesh_cores > 1:
         # Clean stale snappy fields from prior runs/templates before decomposePar.
         for stale in [cfg.case_dir / "0" / "cellLevel", cfg.case_dir / "0" / "pointLevel"]:
@@ -768,12 +782,41 @@ def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool | int] | None:
                 f"clamping to {hw_threads}"
             )
             requested = hw_threads
+        solver_cores = requested
         run_command(cfg, ["decomposePar", "-force"], cfg.case_dir / "log.decomposePar.auto")
-        run_command(
-            cfg,
-            [mpirun, *mpirun_opts, "-np", str(requested), "snappyHexMesh", "-parallel", "-overwrite"],
-            cfg.case_dir / "log.snappyHexMesh.auto",
-        )
+        snappy_log = cfg.case_dir / "log.snappyHexMesh.auto"
+        mpirun_cmd = [
+            mpirun,
+            *mpirun_opts,
+            "-np",
+            str(requested),
+            "snappyHexMesh",
+            "-parallel",
+            "-overwrite",
+        ]
+        try:
+            run_command(cfg, mpirun_cmd, snappy_log)
+        except RuntimeError as exc:
+            # OpenMPI can refuse slots on some WSL setups. Retry with oversubscribe if needed.
+            if not cfg.dry_run and snappy_log.exists():
+                log_text = snappy_log.read_text(errors="ignore").lower()
+            else:
+                log_text = ""
+            if "not enough slots" in log_text and "--oversubscribe" not in mpirun_cmd:
+                log_step("mpirun reported not enough slots; retrying with --oversubscribe")
+                mpirun_cmd = [
+                    mpirun,
+                    *mpirun_opts,
+                    "--oversubscribe",
+                    "-np",
+                    str(requested),
+                    "snappyHexMesh",
+                    "-parallel",
+                    "-overwrite",
+                ]
+                run_command(cfg, mpirun_cmd, snappy_log)
+            else:
+                raise
         run_command(
             cfg,
             ["reconstructParMesh", "-constant"],
@@ -838,7 +881,63 @@ def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool | int] | None:
         return mesh_metrics
 
     log_step("Phase 5: running solver")
-    run_command(cfg, ["simpleFoam"], cfg.case_dir / "log.simpleFoam.auto")
+    if solver_cores > 1:
+        update_decompose_par(cfg)
+        mpirun = shutil.which("mpirun") or shutil.which("mpiexec")
+        if mpirun is None:
+            raise RuntimeError("mpirun/mpiexec not found for parallel solver.")
+        solver_log = cfg.case_dir / "log.simpleFoam.auto"
+        mpirun_opts: list[str] = []
+        physical_cores, hw_threads = get_core_counts()
+        requested = solver_cores
+        if requested > physical_cores and requested <= hw_threads:
+            mpirun_opts.append("--use-hwthread-cpus")
+            log_step(
+                "Using hardware threads for mpirun slots "
+                f"(requested={requested}, cores={physical_cores}, threads={hw_threads})"
+            )
+        if requested > hw_threads:
+            log_step(
+                f"Requested solver_cores={requested} exceeds available threads ({hw_threads}); "
+                f"clamping to {hw_threads}"
+            )
+            requested = hw_threads
+        run_command(cfg, ["decomposePar", "-force"], cfg.case_dir / "log.decomposePar.auto")
+        mpirun_cmd = [
+            mpirun,
+            *mpirun_opts,
+            "-np",
+            str(requested),
+            "simpleFoam",
+            "-parallel",
+        ]
+        try:
+            run_command(cfg, mpirun_cmd, solver_log)
+        except RuntimeError as exc:
+            if not cfg.dry_run and solver_log.exists():
+                log_text = solver_log.read_text(errors="ignore").lower()
+            else:
+                log_text = ""
+            if "not enough slots" in log_text and "--oversubscribe" not in mpirun_cmd:
+                log_step("mpirun reported not enough slots; retrying solver with --oversubscribe")
+                mpirun_cmd = [
+                    mpirun,
+                    *mpirun_opts,
+                    "--oversubscribe",
+                    "-np",
+                    str(requested),
+                    "simpleFoam",
+                    "-parallel",
+                ]
+                run_command(cfg, mpirun_cmd, solver_log)
+            else:
+                raise
+        run_command(cfg, ["reconstructPar"], cfg.case_dir / "log.reconstructPar.auto")
+        if not cfg.dry_run:
+            for proc_dir in cfg.case_dir.glob("processor*"):
+                shutil.rmtree(proc_dir, ignore_errors=True)
+    else:
+        run_command(cfg, ["simpleFoam"], cfg.case_dir / "log.simpleFoam.auto")
     return mesh_metrics
 
 
@@ -1013,6 +1112,7 @@ def print_config(cfg: RunConfig) -> None:
 
 def main() -> None:
     cfg = parse_args()
+    ensure_current_des(cfg)
     print_config(cfg)
     run_vsp_export_and_prepare_geometry(cfg)
     setup_case_from_template(cfg)

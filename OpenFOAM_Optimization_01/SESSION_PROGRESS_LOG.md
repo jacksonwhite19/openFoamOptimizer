@@ -132,7 +132,7 @@ Use this file for real-time, session-by-session tracking of what was completed, 
 
 ### Work Completed
 - `[x]` Diagnosed persistent skew faces as trailing-edge localized in ParaView.
-- `[x]` Updated geometry workflow to re-export STL and convert units (`baseline.stl` mm -> `baseline_m.stl` m).
+- `[x]` Updated geometry workflow to re-export STL and convert units (`current.stl` mm -> `current_m.stl` m).
 - `[x]` Debugged snappy failure root cause (`snapControls` parse issue) and restored valid dictionary syntax.
 - `[x]` Rebuilt mesh with corrected setup and verified clean gate pass.
 - `[x]` Extended solver run to 400 iterations for better averaging.

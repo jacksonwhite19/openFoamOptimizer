@@ -29,7 +29,7 @@ Phase A: The Geometry Engine (The "Concierge")
 
         Run CompGeom for a watertight mesh.
 
-        Export baseline.stl for snappyHexMesh.
+        Export current.stl for snappyHexMesh.
 
         Export MassProp.csv for CG and DegenGeom for Aref​.
 

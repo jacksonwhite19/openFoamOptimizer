@@ -1,8 +1,8 @@
 ## Steps:
 - generate STL
-- check STL with surfaceCheck baseline.stl
+- check STL with surfaceCheck current.stl
 - convert units from mm to m
-    - surfaceTransformPoints "scale=(0.001 0.001 0.001)" baseline.stl baseline_m.stl
+    - surfaceTransformPoints "scale=(0.001 0.001 0.001)" current.stl current_m.stl
 - copy geometry to constant > geometry folder 
 - update snappyHexMeshDict
 - Update surfaceFeaturesDict - reference motorbike ex. and change file name

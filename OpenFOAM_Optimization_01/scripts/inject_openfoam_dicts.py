@@ -60,7 +60,7 @@ def inject_force_coeffs(
 def inject_snappy_hex_mesh(
     snappy_dict_path: Path,
     vsp_data: Dict[str, float],
-    stl_name: str = "baseline.stl",
+    stl_name: str = "current.stl",
     backup: bool = True
 ) -> None:
     """
@@ -96,7 +96,7 @@ def inject_snappy_hex_mesh(
 def inject_all_openfoam_dicts(
     case_dir: Path,
     vsp_data: Dict[str, float],
-    stl_name: str = "baseline.stl"
+    stl_name: str = "current.stl"
 ) -> None:
     """
     Update all OpenFOAM dictionaries in a case directory.
@@ -143,7 +143,7 @@ def main():
     parser.add_argument(
         "--stl-name",
         type=str,
-        default="baseline.stl",
+        default="current.stl",
         help="STL filename used in the case",
     )
     args = parser.parse_args()

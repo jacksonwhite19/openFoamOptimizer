@@ -9,7 +9,7 @@ Phase 1:
 Phase 2:
 - Create a fresh case from template
 - Ensure triSurface directory exists
-- Copy baseline_m STL into case
+- Copy current_m STL into case
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 import shutil
 import subprocess
@@ -47,6 +48,7 @@ class RunConfig:
     max_non_orthogonality: float
     require_mesh_ok: bool
     allow_mesh_warnings: bool
+    mesh_cores: int
     end_time: int | None
     averaging_window: int
     results_filename: str
@@ -106,7 +108,7 @@ def parse_args() -> RunConfig:
     parser.add_argument(
         "--stl-name",
         type=str,
-        default="baseline_m.stl",
+        default="current_m.stl",
         help="STL filename expected in outputs and copied into case.",
     )
     parser.add_argument(
@@ -158,7 +160,7 @@ def parse_args() -> RunConfig:
     parser.add_argument(
         "--raw-stl-name",
         type=str,
-        default="baseline.stl",
+        default="current.stl",
         help="Raw STL filename in outputs_dir (typically mm units).",
     )
     parser.add_argument(
@@ -177,6 +179,12 @@ def parse_args() -> RunConfig:
         type=float,
         default=70.0,
         help="Maximum allowed mesh non-orthogonality from checkMesh.",
+    )
+    parser.add_argument(
+        "--mesh-cores",
+        type=int,
+        default=1,
+        help="Number of cores for parallel snappyHexMesh (default: 1).",
     )
     parser.add_argument(
         "--require-mesh-ok",
@@ -256,6 +264,7 @@ def parse_args() -> RunConfig:
         max_non_orthogonality=args.max_non_orthogonality,
         require_mesh_ok=args.require_mesh_ok,
         allow_mesh_warnings=args.allow_mesh_warnings,
+        mesh_cores=args.mesh_cores,
         end_time=args.end_time,
         averaging_window=args.averaging_window,
         results_filename=args.results_filename,
@@ -436,7 +445,14 @@ def run_vsp_export_and_prepare_geometry(cfg: RunConfig) -> None:
             )
     run_external_command(
         cfg,
-        ["python3", "scripts/compute_openfoam_refs.py"],
+        [
+            "python3",
+            "scripts/compute_openfoam_refs.py",
+            "--des-file",
+            str(cfg.des_file),
+            "--output-file",
+            str(cfg.outputs_dir / "wing_refs.csv"),
+        ],
         cfg.outputs_dir / "log.compute_openfoam_refs.auto",
         cwd=root,
     )
@@ -604,6 +620,71 @@ def apply_solver_controls(cfg: RunConfig) -> None:
     log_step(f"Updated endTime={cfg.end_time} in {control_file}")
 
 
+def update_decompose_par(cfg: RunConfig) -> None:
+    if cfg.mesh_cores <= 1:
+        return
+    decompose_file = cfg.case_dir / "system" / "decomposeParDict"
+    if not decompose_file.exists():
+        raise FileNotFoundError(f"Missing decomposeParDict file: {decompose_file}")
+    if cfg.dry_run:
+        log_step(
+            f"[dry-run] would set numberOfSubdomains={cfg.mesh_cores} in {decompose_file}"
+        )
+        return
+    content = decompose_file.read_text()
+    content = _replace_or_fail(
+        content,
+        r"numberOfSubdomains\s+[0-9]+;",
+        f"numberOfSubdomains {cfg.mesh_cores};",
+        "decomposeParDict numberOfSubdomains",
+    )
+    content = _replace_or_fail(
+        content,
+        r"decomposer\s+[A-Za-z0-9_]+;",
+        "decomposer scotch;",
+        "decomposeParDict decomposer",
+    )
+    decompose_file.write_text(content)
+    log_step(
+        f"Updated numberOfSubdomains={cfg.mesh_cores} and decomposer=scotch in {decompose_file}"
+    )
+
+
+def get_core_counts() -> tuple[int, int]:
+    cores = None
+    all_cores = None
+    try:
+        proc = subprocess.run(
+            ["nproc", "--cores"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if proc.returncode == 0:
+            cores = int(proc.stdout.strip())
+    except (FileNotFoundError, ValueError):
+        cores = None
+    try:
+        proc = subprocess.run(
+            ["nproc", "--all"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if proc.returncode == 0:
+            all_cores = int(proc.stdout.strip())
+    except (FileNotFoundError, ValueError):
+        all_cores = None
+    fallback = os.cpu_count() or 1
+    if cores is None:
+        cores = fallback
+    if all_cores is None:
+        all_cores = fallback
+    return cores, all_cores
+
+
 def run_command(cfg: RunConfig, cmd: list[str], log_path: Path) -> None:
     run_external_command(cfg, cmd, log_path, cwd=cfg.case_dir)
 
@@ -659,7 +740,50 @@ def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool | int] | None:
 
     run_command(cfg, ["blockMesh"], cfg.case_dir / "log.blockMesh.auto")
     run_command(cfg, ["surfaceFeatures"], cfg.case_dir / "log.surfaceFeatures.auto")
-    run_command(cfg, ["snappyHexMesh", "-overwrite"], cfg.case_dir / "log.snappyHexMesh.auto")
+    if cfg.mesh_cores > 1:
+        # Clean stale snappy fields from prior runs/templates before decomposePar.
+        for stale in [cfg.case_dir / "0" / "cellLevel", cfg.case_dir / "0" / "pointLevel"]:
+            if stale.exists():
+                if cfg.dry_run:
+                    log_step(f"[dry-run] would remove stale field: {stale}")
+                else:
+                    stale.unlink()
+                    log_step(f"Removed stale field before decomposePar: {stale}")
+        update_decompose_par(cfg)
+        mpirun = shutil.which("mpirun") or shutil.which("mpiexec")
+        if mpirun is None:
+            raise RuntimeError("mpirun/mpiexec not found for parallel meshing.")
+        physical_cores, hw_threads = get_core_counts()
+        requested = cfg.mesh_cores
+        mpirun_opts: list[str] = []
+        if requested > physical_cores and requested <= hw_threads:
+            mpirun_opts.append("--use-hwthread-cpus")
+            log_step(
+                "Using hardware threads for mpirun slots "
+                f"(requested={requested}, cores={physical_cores}, threads={hw_threads})"
+            )
+        if requested > hw_threads:
+            log_step(
+                f"Requested mesh_cores={requested} exceeds available threads ({hw_threads}); "
+                f"clamping to {hw_threads}"
+            )
+            requested = hw_threads
+        run_command(cfg, ["decomposePar", "-force"], cfg.case_dir / "log.decomposePar.auto")
+        run_command(
+            cfg,
+            [mpirun, *mpirun_opts, "-np", str(requested), "snappyHexMesh", "-parallel", "-overwrite"],
+            cfg.case_dir / "log.snappyHexMesh.auto",
+        )
+        run_command(
+            cfg,
+            ["reconstructParMesh", "-constant"],
+            cfg.case_dir / "log.reconstructParMesh.auto",
+        )
+        if not cfg.dry_run:
+            for proc_dir in cfg.case_dir.glob("processor*"):
+                shutil.rmtree(proc_dir, ignore_errors=True)
+    else:
+        run_command(cfg, ["snappyHexMesh", "-overwrite"], cfg.case_dir / "log.snappyHexMesh.auto")
     run_command(cfg, ["checkMesh"], cfg.case_dir / "log.checkMesh.auto")
 
     mesh_metrics: dict[str, float | bool | int] | None = None
@@ -874,6 +998,7 @@ def print_config(cfg: RunConfig) -> None:
     print(f"  inject_refs  : {cfg.inject_refs}")
     print(f"  max_skewness : {cfg.max_skewness}")
     print(f"  max_non_ortho: {cfg.max_non_orthogonality}")
+    print(f"  mesh_cores   : {cfg.mesh_cores}")
     print(f"  require_mesh_ok: {cfg.require_mesh_ok}")
     print(f"  allow_mesh_w : {cfg.allow_mesh_warnings}")
     print(f"  end_time     : {cfg.end_time}")

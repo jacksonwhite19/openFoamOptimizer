@@ -160,15 +160,15 @@ class SingleAnglePipeline:
         tri_surface_dir = self.case_dir / "constant" / "triSurface"
         tri_surface_dir.mkdir(parents=True, exist_ok=True)
         
-        stl_source = self.geometry_outputs / "baseline.stl"
-        stl_dest = tri_surface_dir / "baseline.stl"
+        stl_source = self.geometry_outputs / "current.stl"
+        stl_dest = tri_surface_dir / "current.stl"
         
         print(f"  Copying STL: {stl_source} -> {stl_dest}")
         shutil.copy(stl_source, stl_dest)
         
         # Inject reference values into OpenFOAM dictionaries
         print("  Injecting reference values into OpenFOAM dictionaries...")
-        inject_all_openfoam_dicts(self.case_dir, self.vsp_data, "baseline.stl")
+        inject_all_openfoam_dicts(self.case_dir, self.vsp_data, "current.stl")
     
     def step4_set_angle_of_attack(self):
         """Modify 0/U to set angle of attack"""

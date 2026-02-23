@@ -1,0 +1,61 @@
+{
+  "entries": {
+    "23febaed4795c2034e99234f0d2c7da35a82dd20c2768041fa818abafb29e36e": {
+      "evaluation_json": "results/optimizer_runs/20260222_161719/iter_smoke2/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_161719/iter_smoke2/metadata.json",
+      "candidate_id": "iter_smoke2",
+      "run_id": "20260222_161719",
+      "timestamp": "2026-02-22T16:56:30",
+      "design_json": "designs/example_design_iter001.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 12,
+        "alpha_step": 3,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "sweep_retries": 1,
+        "timeout_sweep_sec": 7200
+      }
+    },
+    "44eb9b14d78768a9fc4a052f11960cdadc1311cfbefe7f2e2301e207af694e70": {
+      "evaluation_json": "results/optimizer_runs/20260222_171452/iter_0001/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_171452/iter_0001/metadata.json",
+      "candidate_id": "iter_0001",
+      "run_id": "20260222_171452",
+      "timestamp": "2026-02-22T17:54:05",
+      "design_json": "results/optimizer_runs/20260222_171452/designs/iter_0001.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 12,
+        "alpha_step": 3,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "ad8b9d9f5bb8203d53c8a251a52f81d197c218ba9cbd960159326462524ccc82": {
+      "evaluation_json": "results/optimizer_runs/20260222_171452/iter_0002/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260222_171452/iter_0002/metadata.json",
+      "candidate_id": "iter_0002",
+      "run_id": "20260222_171452",
+      "timestamp": "2026-02-22T18:33:05",
+      "design_json": "results/optimizer_runs/20260222_171452/designs/iter_0002.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 12,
+        "alpha_step": 3,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "problem_name": "blended_wing_uav_ld_static_margin",
+  "problem_schema_version": "1.0",
+  "sweep_definition": {
+    "alphas_deg": [
+      0,
+      3,
+      6,
+      9,
+      12
+    ],
+    "alpha_weights": [
+      0.1,
+      0.2,
+      0.3,
+      0.25,
+      0.15
+    ],
+    "solver_end_time": 300,
+    "averaging_window": 50,
+    "mesh_policy": "mesh_once_reuse_within_candidate"
+  },
+  "inputs": {
+    "problem_file": "optimization_problem_definition.json",
+    "cases_root": "cases\\test_runs",
+    "case_prefix": "alpha",
+    "case_suffix": "sweep"
+  },
+  "evaluation": {
+    "schema_version": "1.0",
+    "status": "constraint_violation",
+    "constraints": {
+      "feasible": false,
+      "static_margin_percent": 47.14830657871047,
+      "cma_slope": -0.0430281,
+      "static_margin_percent_min": 5.0,
+      "static_margin_percent_max": 15.0,
+      "require_negative_cma_slope": true
+    },
+    "objective": {
+      "score_total": -12.054454,
+      "base_weighted_ld_mean": 2.804868,
+      "base_weighted_cl_mean": 0.706005,
+      "penalty_total": 14.859323,
+      "penalties": {
+        "missing_alpha": 0.0,
+        "mesh_warnings": 1.5,
+        "mesh_failed_checks": 0.5,
+        "nonconverged": 0.0,
+        "noise": 0.0,
+        "static_margin": 12.859323,
+        "cma": 0.0
+      }
+    },
+    "per_alpha": [
+      {
+        "alpha_deg": 0.0,
+        "case_name": "alpha_0_sweep",
+        "status": "quasi_steady",
+        "weight": 0.1,
+        "CL_mean": 0.138717,
+        "CD_mean": 0.11646,
+        "CM_mean": -0.106542,
+        "L_D_mean": 1.191114,
+        "CL_std_rel": 0.01223354022938789,
+        "CD_std_rel": 0.011076764554353425,
+        "CM_std_rel": 0.015524394135646038,
+        "mesh_warning": true,
+        "failed_checks": 1,
+        "penalty": 2.0
+      },
+      {
+        "alpha_deg": 3.0,
+        "case_name": "alpha_3_sweep",
+        "status": "quasi_steady",
+        "weight": 0.2,
+        "CL_mean": 0.38649,
+        "CD_mean": 0.156031,
+        "CM_mean": -0.219804,
+        "L_D_mean": 2.477015,
+        "CL_std_rel": 0.003420528344847215,
+        "CD_std_rel": 0.006267985208067627,
+        "CM_std_rel": 0.005686884679077724,
+        "mesh_warning": false,
+        "failed_checks": 0,
+        "penalty": 0.0
+      },
+      {
+        "alpha_deg": 6.0,
+        "case_name": "alpha_6_sweep",
+        "status": "quasi_steady",
+        "weight": 0.3,
+        "CL_mean": 0.65348,
+        "CD_mean": 0.208122,
+        "CM_mean": -0.343961,
+        "L_D_mean": 3.139896,
+        "CL_std_rel": 0.0032701842443533086,
+        "CD_std_rel": 0.011392356406338589,
+        "CM_std_rel": 0.004337701076575542,
+        "mesh_warning": false,
+        "failed_checks": 0,
+        "penalty": 0.0
+      },
+      {
+        "alpha_deg": 9.0,
+        "case_name": "alpha_9_sweep",
+        "status": "converged",
+        "weight": 0.25,
+        "CL_mean": 0.934668,
+        "CD_mean": 0.29594,
+        "CM_mean": -0.477349,
+        "L_D_mean": 3.158306,
+        "CL_std_rel": 0.002803134374986626,
+        "CD_std_rel": 0.0036527674528620668,
+        "CM_std_rel": 0.006058460371761541,
+        "mesh_warning": false,
+        "failed_checks": 0,
+        "penalty": 0.0
+      },
+      {
+        "alpha_deg": 12.0,
+        "case_name": "alpha_12_sweep",
+        "status": "converged",
+        "weight": 0.15,
+        "CL_mean": 1.234161,
+        "CD_mean": 0.403489,
+        "CM_mean": -0.623191,
+        "L_D_mean": 3.058724,
+        "CL_std_rel": 0.003348833742113063,
+        "CD_std_rel": 0.0017596514403118797,
+        "CM_std_rel": 0.0070443892803329945,
+        "mesh_warning": false,
+        "failed_checks": 0,
+        "penalty": 0.0
+      }
+    ]
+  }
+}

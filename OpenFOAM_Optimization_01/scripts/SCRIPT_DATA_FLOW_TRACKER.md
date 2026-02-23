@@ -28,7 +28,7 @@ This file tracks what each `scripts/*.py` and `scripts/vsp_utils/*.vspscript` fi
   - `scripts/parse_vsp_outputs.py` (massprops CSV)
 
 Notes:
-- Despite the filename, this script currently does **not** call `ExportFile(..., EXPORT_STL)`; it does mass/degen exports.
+- This script now performs explicit STL export to `geometry/outputs/current.stl` in addition to mass/degen exports.
 
 ### `scripts/vsp_utils/export_frontal_area.vspscript`
 - Purpose: Run VSP `Projection` analysis in X projection direction and export frontal area.
@@ -43,9 +43,9 @@ Notes:
   - `scripts/parse_vsp_outputs.py`
 
 ### `scripts/compute_openfoam_refs.py`
-- Purpose: Compute OpenFOAM reference quantities from `baseline.des` wing params.
+- Purpose: Compute OpenFOAM reference quantities from a specified DES file (baseline or iteration).
 - Reads:
-  - `geometry/source/baseline.des`
+  - `geometry/source/baseline.des` (default) or `geometry/source/iterations/<iter>.des`
 - Writes:
   - `geometry/outputs/wing_refs.csv`
 - Produces key values:

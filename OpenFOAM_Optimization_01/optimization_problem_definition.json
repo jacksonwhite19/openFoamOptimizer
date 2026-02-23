@@ -1,0 +1,298 @@
+{
+  "schema_version": "1.0",
+  "problem_name": "blended_wing_uav_ld_static_margin",
+  "description": "Phase 1 optimization contract: variables, sanity constraints, objective, and penalties.",
+  "sweep_definition": {
+    "alphas_deg": [
+      0,
+      3,
+      6,
+      9,
+      12
+    ],
+    "alpha_weights": [
+      0.1,
+      0.2,
+      0.3,
+      0.25,
+      0.15
+    ],
+    "solver_end_time": 300,
+    "averaging_window": 50,
+    "mesh_policy": "mesh_once_reuse_within_candidate"
+  },
+  "design_variables": [
+    {
+      "name": "wing_half_span_m",
+      "units": "m",
+      "min": 0.2,
+      "max": 0.5,
+      "group": "wing",
+      "mapping_status": "mapped",
+      "des_binding": {
+        "mode": "direct",
+        "param_ids": [
+          "ZVZTXUKAZWE",
+          "FLPOVAIKYMN"
+        ],
+        "des_units": "mm",
+        "unit_scale": 1000.0
+      }
+    },
+    {
+      "name": "wing_sweep_deg",
+      "units": "deg",
+      "min": -5.0,
+      "max": 35.0,
+      "group": "wing",
+      "mapping_status": "mapped",
+      "des_binding": {
+        "mode": "direct",
+        "param_ids": [
+          "QTIUMVPVMNM",
+          "OELVSBZPUKI"
+        ],
+        "des_units": "deg",
+        "unit_scale": 1.0
+      }
+    },
+    {
+      "name": "wing_taper_ratio",
+      "units": "-",
+      "min": 0.25,
+      "max": 1.0,
+      "group": "wing",
+      "mapping_status": "mapped",
+      "des_binding": {
+        "mode": "direct",
+        "param_ids": [
+          "QDYUWWIMJJA",
+          "WETEDEKPMBU"
+        ],
+        "des_units": "-",
+        "unit_scale": 1.0
+      }
+    },
+    {
+      "name": "wing_root_chord_m",
+      "units": "m",
+      "min": 0.12,
+      "max": 0.35,
+      "group": "wing",
+      "mapping_status": "mapped",
+      "des_binding": {
+        "mode": "derived_tip_from_root_and_taper",
+        "param_ids": [
+          "IQQQXPRMWKO",
+          "UQYSYUAIZXN"
+        ],
+        "depends_on": [
+          "wing_taper_ratio"
+        ],
+        "formula": "tip_chord_m = wing_root_chord_m * wing_taper_ratio",
+        "des_units": "mm",
+        "unit_scale": 1000.0
+      }
+    },
+    {
+      "name": "wing_x_location_m",
+      "units": "m",
+      "min": 0.1,
+      "max": 0.35,
+      "group": "wing",
+      "mapping_status": "mapped",
+      "des_binding": {
+        "mode": "direct",
+        "param_ids": [
+          "VEBCTUVXEVB",
+          "QSAPUXPYQWU"
+        ],
+        "des_units": "mm",
+        "unit_scale": 1000.0
+      }
+    },
+    {
+      "name": "aileron_length_c_start",
+      "units": "-",
+      "min": 0.1,
+      "max": 0.6,
+      "group": "control_surface",
+      "mapping_status": "mapped",
+      "des_binding": {
+        "mode": "direct",
+        "param_ids": [
+          "EZZPYZAMUNE",
+          "JOOKRGHFGUK"
+        ],
+        "des_units": "-",
+        "unit_scale": 1.0
+      }
+    },
+    {
+      "name": "tail_root_chord_m",
+      "units": "m",
+      "min": 0.06,
+      "max": 0.2,
+      "group": "tail",
+      "mapping_status": "mapped",
+      "des_binding": {
+        "mode": "direct",
+        "param_ids": [
+          "ARLMRMBRQTY"
+        ],
+        "des_units": "mm",
+        "unit_scale": 1000.0
+      }
+    },
+    {
+      "name": "tail_sweep_deg",
+      "units": "deg",
+      "min": 0.0,
+      "max": 45.0,
+      "group": "tail",
+      "mapping_status": "mapped",
+      "des_binding": {
+        "mode": "direct",
+        "param_ids": [
+          "OJGNBNXLMTG"
+        ],
+        "des_units": "deg",
+        "unit_scale": 1.0
+      }
+    },
+    {
+      "name": "tail_incidence_deg",
+      "units": "deg",
+      "min": -4.0,
+      "max": 6.0,
+      "group": "tail",
+      "mapping_status": "pending_vsp_param_binding"
+    },
+    {
+      "name": "wing_dihedral_deg",
+      "units": "deg",
+      "min": -3.0,
+      "max": 12.0,
+      "group": "wing",
+      "mapping_status": "pending_vsp_param_binding"
+    },
+    {
+      "name": "wing_twist_root_deg",
+      "units": "deg",
+      "min": -4.0,
+      "max": 4.0,
+      "group": "wing",
+      "mapping_status": "pending_vsp_param_binding"
+    },
+    {
+      "name": "wing_twist_tip_deg",
+      "units": "deg",
+      "min": -8.0,
+      "max": 2.0,
+      "group": "wing",
+      "mapping_status": "pending_vsp_param_binding"
+    },
+    {
+      "name": "wing_tc_ratio",
+      "units": "-",
+      "min": 0.08,
+      "max": 0.18,
+      "group": "wing",
+      "mapping_status": "pending_vsp_param_binding"
+    },
+    {
+      "name": "centerbody_half_span_m",
+      "units": "m",
+      "min": 0.03,
+      "max": 0.2,
+      "group": "centerbody",
+      "mapping_status": "pending_vsp_param_binding"
+    },
+    {
+      "name": "centerbody_root_chord_m",
+      "units": "m",
+      "min": 0.12,
+      "max": 0.45,
+      "group": "centerbody",
+      "mapping_status": "pending_vsp_param_binding"
+    },
+    {
+      "name": "centerbody_taper_ratio",
+      "units": "-",
+      "min": 0.4,
+      "max": 1.1,
+      "group": "centerbody",
+      "mapping_status": "pending_vsp_param_binding"
+    }
+  ],
+  "geometry_sanity_constraints": [
+    {
+      "id": "all_lengths_positive",
+      "type": "hard",
+      "rule": "all length variables > 0"
+    },
+    {
+      "id": "taper_ratio_bounds",
+      "type": "hard",
+      "rule": "all taper ratios in [0.2, 1.2]"
+    },
+    {
+      "id": "wing_aspect_ratio_bounds",
+      "type": "hard",
+      "rule": "wing_AR in [3.0, 14.0]"
+    },
+    {
+      "id": "wing_area_bounds",
+      "type": "hard",
+      "rule": "wing_planform_area_m2 in [0.02, 0.5]"
+    },
+    {
+      "id": "te_thickness_min",
+      "type": "hard",
+      "rule": "trailing_edge_thickness_m >= 5e-4"
+    }
+  ],
+  "objective": {
+    "name": "weighted_ld_minus_penalties",
+    "maximize": true,
+    "formula_text": "score_total = weighted_mean(L/D over alpha sweep) - penalty_total",
+    "base_metric": "weighted_ld_mean",
+    "secondary_metrics": [
+      "weighted_cl_mean",
+      "static_margin_percent",
+      "cma_slope"
+    ]
+  },
+  "constraints": {
+    "accepted_convergence_status": [
+      "converged",
+      "quasi_steady"
+    ],
+    "static_margin_percent_min": 5.0,
+    "static_margin_percent_max": 15.0,
+    "require_negative_cma_slope": true,
+    "noise_thresholds": {
+      "cl_std_rel_max": 0.02,
+      "cd_std_rel_max": 0.02,
+      "cm_std_rel_max": 0.03
+    }
+  },
+  "penalties": {
+    "missing_alpha_case": 50.0,
+    "mesh_warning_per_alpha": 1.5,
+    "mesh_failed_check_per_count": 0.5,
+    "nonconverged_per_alpha": 2.0,
+    "noise_threshold_violation_per_metric": 1.0,
+    "static_margin_outside_range_per_percent": 0.4,
+    "positive_cma_slope": 8.0
+  },
+  "evaluation_contract": {
+    "output_schema_version": "1.0",
+    "required_fields": [
+      "objective.score_total",
+      "objective.penalty_total",
+      "constraints.feasible",
+      "status"
+    ]
+  }
+}

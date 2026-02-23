@@ -21,7 +21,7 @@ void main()
     WriteResultsCSVFile(ridmp, massprop_csv);
 
     // --- Explicit STL export (raw mm units) ---
-    string stl_out = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/outputs/baseline.stl";
+    string stl_out = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/outputs/current.stl";
     ExportFile(stl_out, SET_ALL, EXPORT_STL);
     Update();
 

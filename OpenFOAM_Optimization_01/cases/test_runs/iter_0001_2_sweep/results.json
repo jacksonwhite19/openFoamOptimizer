@@ -1,21 +1,21 @@
 {
   "geometry_id": "current_m",
   "alpha_deg": 2.0,
-  "convergence_status": "quasi_steady",
-  "iterations": 300,
+  "convergence_status": "converged",
+  "iterations": 400,
   "averaging_window": {
     "rows": 50,
-    "start_time": 251,
-    "end_time": 300
+    "start_time": 351,
+    "end_time": 400
   },
   "force_coefficients": {
-    "CL_mean": 0.396937,
-    "CL_std": 0.002107,
-    "CD_mean": 0.20158,
-    "CD_std": 0.002677,
-    "CM_mean": -0.233458,
-    "CM_std": 0.001843,
-    "L_D_mean": 1.969132
+    "CL_mean": 0.266349,
+    "CL_std": 0.001026,
+    "CD_mean": 0.145143,
+    "CD_std": 0.000155,
+    "CM_mean": -0.149305,
+    "CM_std": 0.001064,
+    "L_D_mean": 1.835077
   },
   "mesh_quality": {
     "mesh_ok": null,

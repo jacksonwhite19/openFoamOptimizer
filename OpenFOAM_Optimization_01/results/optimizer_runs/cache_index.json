@@ -856,6 +856,106 @@
         "sweep_retries": 0,
         "timeout_sweep_sec": null
       }
+    },
+    "5a6c940d9ad6d53d554cae19a089bfd0ed638522bd58d8ab6cb8608fb79e92fa": {
+      "evaluation_json": "results/optimizer_runs/20260223_165316/iter_0001/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260223_165316/iter_0001/metadata.json",
+      "candidate_id": "iter_0001",
+      "run_id": "20260223_165316",
+      "timestamp": "2026-02-23T16:58:52",
+      "design_json": "results/optimizer_runs/20260223_165316/designs/iter_0001.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "94a294aa1a663da660a1fc0839ff1481d9d646557b880df81ea9d05f82b9a7f0": {
+      "evaluation_json": "results/optimizer_runs/20260223_165316/iter_0002/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260223_165316/iter_0002/metadata.json",
+      "candidate_id": "iter_0002",
+      "run_id": "20260223_165316",
+      "timestamp": "2026-02-23T17:04:28",
+      "design_json": "results/optimizer_runs/20260223_165316/designs/iter_0002.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "c6ed87f95b298f8f2de4c3aa44adfefcc7fc34737b4a9a3b298e8cbe74e65f5a": {
+      "evaluation_json": "results/optimizer_runs/20260223_165316/iter_0003/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260223_165316/iter_0003/metadata.json",
+      "candidate_id": "iter_0003",
+      "run_id": "20260223_165316",
+      "timestamp": "2026-02-23T17:09:49",
+      "design_json": "results/optimizer_runs/20260223_165316/designs/iter_0003.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "84315c614536c74d915225ca81ce3270d60fe9e6d9f529b7eea8a818a5d0b074": {
+      "evaluation_json": "results/optimizer_runs/20260223_171619/iter_0001/evaluation.json",
+      "metadata_json": "results/optimizer_runs/20260223_171619/iter_0001/metadata.json",
+      "candidate_id": "iter_0001",
+      "run_id": "20260223_171619",
+      "timestamp": "2026-02-23T17:21:48",
+      "design_json": "results/optimizer_runs/20260223_171619/designs/iter_0001.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 300,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
+    },
+    "d27ee260c25d1b64a6a42c1416fa9433f8d3834aa835cdb258fd780e04d770af": {
+      "evaluation_json": "results/optimizer_runs/doe20_softpen_e400/iter_0001/evaluation.json",
+      "metadata_json": "results/optimizer_runs/doe20_softpen_e400/iter_0001/metadata.json",
+      "candidate_id": "iter_0001",
+      "run_id": "doe20_softpen_e400",
+      "timestamp": "2026-02-23T20:51:40",
+      "design_json": "results/optimizer_runs/doe20_softpen_e400/designs/iter_0001.json",
+      "problem_file": "optimization_problem_definition.json",
+      "sweep": {
+        "alpha_start": 0,
+        "alpha_end": 8,
+        "alpha_step": 2,
+        "end_time": 400,
+        "uinf": 25.0,
+        "averaging_window": 50,
+        "mesh_cores": 8,
+        "sweep_retries": 0,
+        "timeout_sweep_sec": null
+      }
     }
   }
 }

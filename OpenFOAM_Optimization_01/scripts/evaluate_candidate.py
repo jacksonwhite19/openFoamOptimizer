@@ -21,6 +21,11 @@ from pathlib import Path
 from typing import Any
 
 
+def local_now() -> datetime:
+    """Timezone-aware local system time."""
+    return datetime.now().astimezone()
+
+
 @dataclass(frozen=True)
 class EvalConfig:
     candidate_id: str
@@ -159,7 +164,7 @@ def parse_args() -> EvalConfig:
     )
     args = parser.parse_args()
 
-    run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = args.run_id or local_now().strftime("%Y%m%d_%H%M%S")
     case_prefix = args.case_prefix or args.candidate_id
 
     des_output = args.des_output
@@ -340,6 +345,18 @@ def run_cmd(
     return time.monotonic() - start
 
 
+def fallback_failure_score(status: str) -> float:
+    """Deterministic score for failed evaluations so optimizers can continue ranking."""
+    # Keep these far below plausible CFD scores (~O(1)) but ordered by failure class.
+    if status == "geometry_fail":
+        return -900.0
+    if status == "solver_fail":
+        return -1000.0
+    if status == "post_fail":
+        return -1100.0
+    return -1200.0
+
+
 def main() -> None:
     cfg = parse_args()
     problem = read_json(cfg.problem_file)
@@ -504,15 +521,20 @@ def main() -> None:
 
     # If scoring didn't run, write a minimal evaluation file.
     if not score_out.exists():
+        fail_score = fallback_failure_score(status)
         fallback = {
             "problem_name": problem.get("problem_name"),
             "problem_schema_version": problem.get("schema_version"),
             "evaluation": {
                 "status": status,
                 "error": error_message,
+                "objective": {
+                    "score_total": fail_score,
+                    "penalty_total": abs(fail_score),
+                },
                 "constraints": {
                     "feasible": False
-                }
+                },
             }
         }
         score_out.write_text(json.dumps(fallback, indent=2))
@@ -592,7 +614,7 @@ def main() -> None:
         "metadata_json": str(output_dir / "metadata.json"),
         "candidate_id": cfg.candidate_id,
         "run_id": cfg.run_id,
-        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "timestamp": local_now().isoformat(timespec="seconds"),
         "design_json": str(cfg.design_json),
         "problem_file": str(cfg.problem_file),
         "sweep": {

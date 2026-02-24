@@ -55,6 +55,11 @@ class OptConfig:
         return self.output_root / self.run_id
 
 
+def local_now() -> datetime:
+    """Timezone-aware local system time."""
+    return datetime.now().astimezone()
+
+
 def parse_args() -> OptConfig:
     parser = argparse.ArgumentParser(description="DOE optimizer driver (Stage A).")
     parser.add_argument(
@@ -212,7 +217,7 @@ def parse_args() -> OptConfig:
 
     if args.resume and args.run_id is None:
         raise RuntimeError("--resume requires --run-id to be set.")
-    run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = args.run_id or local_now().strftime("%Y%m%d_%H%M%S")
     return OptConfig(
         problem_file=args.problem_file,
         run_id=run_id,

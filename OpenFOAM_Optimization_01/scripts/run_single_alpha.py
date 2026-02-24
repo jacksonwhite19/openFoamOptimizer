@@ -21,6 +21,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -319,6 +320,82 @@ def run_external_command(
     return proc.returncode
 
 
+def run_external_command_with_timeout_retry(
+    cfg: RunConfig,
+    cmd: list[str],
+    log_path: Path,
+    cwd: Path | None = None,
+    allow_nonzero: bool = False,
+    timeout_sec: float | None = None,
+    retries: int = 0,
+    retry_delay_sec: float = 5.0,
+) -> int:
+    """Run a command with an optional per-attempt timeout and retry loop.
+
+    This is used for OpenVSP exports, which occasionally hang indefinitely.
+    """
+    cmd_str = " ".join(cmd)
+    if cfg.dry_run:
+        log_step(
+            f"[dry-run] would run: {cmd_str} (timeout={timeout_sec}, retries={retries}, "
+            f"log: {log_path}, cwd={cwd or Path.cwd()})"
+        )
+        return 0
+
+    attempts = max(1, retries + 1)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    for attempt in range(1, attempts + 1):
+        log_step(
+            f"Running: {cmd_str}"
+            + (f" [attempt {attempt}/{attempts}]" if attempts > 1 else "")
+        )
+        mode = "w" if attempt == 1 else "a"
+        with log_path.open(mode) as log_file:
+            if attempts > 1:
+                log_file.write(
+                    f"\n===== attempt {attempt}/{attempts} | timeout={timeout_sec}s | "
+                    f"{time.strftime('%Y-%m-%d %H:%M:%S')} =====\n"
+                )
+                log_file.flush()
+            try:
+                proc = subprocess.run(
+                    cmd,
+                    cwd=str(cwd) if cwd is not None else None,
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    check=False,
+                    timeout=timeout_sec,
+                )
+            except subprocess.TimeoutExpired:
+                msg = (
+                    f"TIMEOUT after {timeout_sec}s: {cmd_str}"
+                    if timeout_sec is not None
+                    else f"TIMEOUT: {cmd_str}"
+                )
+                log_file.write(f"\n{msg}\n")
+                log_file.flush()
+                log_step(msg)
+                if attempt < attempts:
+                    log_step(f"Retrying in {retry_delay_sec:.0f}s...")
+                    time.sleep(retry_delay_sec)
+                    continue
+                raise RuntimeError(f"Command timed out: {cmd_str}. See {log_path}")
+
+        if proc.returncode != 0:
+            if allow_nonzero:
+                log_step(
+                    f"WARNING: command returned {proc.returncode} but continuing: {cmd_str}"
+                )
+                return proc.returncode
+            raise RuntimeError(f"Command failed ({proc.returncode}): {cmd_str}. See {log_path}")
+        return proc.returncode
+
+    # Unreachable, loop either returns or raises.
+    raise RuntimeError(f"Unexpected retry loop exit for command: {cmd_str}")
+
+
 def to_windows_path(path: Path, wsl_windows_drive: str = "Z:") -> str:
     raw = str(path)
 
@@ -386,7 +463,9 @@ def run_vsp_export_and_prepare_geometry(cfg: RunConfig) -> None:
     des_win = to_windows_path(cfg.des_file, cfg.wsl_windows_drive)
     geom_script_win = to_windows_path(cfg.export_geom_script, cfg.wsl_windows_drive)
     frontal_script_win = to_windows_path(cfg.export_frontal_script, cfg.wsl_windows_drive)
-    geom_rc = run_external_command(
+    vsp_timeout_sec = 300
+    vsp_export_retries = 1
+    geom_rc = run_external_command_with_timeout_retry(
         cfg,
         [
             str(vsp_exe_path),
@@ -400,8 +479,10 @@ def run_vsp_export_and_prepare_geometry(cfg: RunConfig) -> None:
         cfg.outputs_dir / "log.vsp_export_geom.auto",
         cwd=vsp_cwd,
         allow_nonzero=True,
+        timeout_sec=vsp_timeout_sec,
+        retries=vsp_export_retries,
     )
-    frontal_rc = run_external_command(
+    frontal_rc = run_external_command_with_timeout_retry(
         cfg,
         [
             str(vsp_exe_path),
@@ -415,6 +496,8 @@ def run_vsp_export_and_prepare_geometry(cfg: RunConfig) -> None:
         cfg.outputs_dir / "log.vsp_export_frontal.auto",
         cwd=vsp_cwd,
         allow_nonzero=True,
+        timeout_sec=vsp_timeout_sec,
+        retries=vsp_export_retries,
     )
 
     if not cfg.dry_run:
@@ -722,6 +805,29 @@ def copy_mesh_from_source_case(cfg: RunConfig) -> None:
     log_step(f"Copied mesh from source case: {src_poly} -> {dst_poly}")
 
 
+def remove_stale_snappy_fields(cfg: RunConfig, label: str) -> None:
+    """Remove snappy-generated aux fields in 0/ that can break decomposePar.
+
+    Do not remove solver initial-condition fields (p/U/k/omega/nut/etc.).
+    """
+    dynamic_fields = {"cellLevel", "pointLevel", "nSurfaceLayers", "thickness", "thicknessFraction"}
+
+    removed: list[Path] = []
+    for field in dynamic_fields:
+        stale = cfg.case_dir / "0" / field
+        if not stale.exists():
+            continue
+        if cfg.dry_run:
+            log_step(f"[dry-run] would remove stale field ({label}): {stale}")
+        else:
+            stale.unlink()
+            removed.append(stale)
+            log_step(f"Removed stale field ({label}): {stale}")
+    if removed:
+        names = ", ".join(sorted(p.name for p in removed))
+        log_step(f"Removed {len(removed)} stale field(s) ({label}): {names}")
+
+
 def parse_check_mesh_metrics(check_mesh_log: Path) -> dict[str, float | bool | int]:
     text = check_mesh_log.read_text()
     non_ortho_match = re.search(
@@ -747,22 +853,77 @@ def parse_check_mesh_metrics(check_mesh_log: Path) -> dict[str, float | bool | i
     }
 
 
+def run_solver(cfg: RunConfig) -> None:
+    solver_cores = cfg.mesh_cores if cfg.mesh_cores > 0 else 1
+    if solver_cores > 1:
+        remove_stale_snappy_fields(cfg, label="before solver decompose")
+        update_decompose_par(cfg)
+        mpirun = shutil.which("mpirun") or shutil.which("mpiexec")
+        if mpirun is None:
+            raise RuntimeError("mpirun/mpiexec not found for parallel solver.")
+        solver_log = cfg.case_dir / "log.simpleFoam.auto"
+        mpirun_opts: list[str] = []
+        physical_cores, hw_threads = get_core_counts()
+        requested = solver_cores
+        if requested > physical_cores and requested <= hw_threads:
+            mpirun_opts.append("--use-hwthread-cpus")
+            log_step(
+                "Using hardware threads for mpirun slots "
+                f"(requested={requested}, cores={physical_cores}, threads={hw_threads})"
+            )
+        if requested > hw_threads:
+            log_step(
+                f"Requested solver_cores={requested} exceeds available threads ({hw_threads}); "
+                f"clamping to {hw_threads}"
+            )
+            requested = hw_threads
+        run_command(cfg, ["decomposePar", "-force"], cfg.case_dir / "log.decomposePar.auto")
+        mpirun_cmd = [
+            mpirun,
+            *mpirun_opts,
+            "-np",
+            str(requested),
+            "simpleFoam",
+            "-parallel",
+        ]
+        try:
+            run_command(cfg, mpirun_cmd, solver_log)
+        except RuntimeError:
+            if not cfg.dry_run and solver_log.exists():
+                log_text = solver_log.read_text(errors="ignore").lower()
+            else:
+                log_text = ""
+            if "not enough slots" in log_text and "--oversubscribe" not in mpirun_cmd:
+                log_step("mpirun reported not enough slots; retrying solver with --oversubscribe")
+                mpirun_cmd = [
+                    mpirun,
+                    *mpirun_opts,
+                    "--oversubscribe",
+                    "-np",
+                    str(requested),
+                    "simpleFoam",
+                    "-parallel",
+                ]
+                run_command(cfg, mpirun_cmd, solver_log)
+            else:
+                raise
+        run_command(cfg, ["reconstructPar"], cfg.case_dir / "log.reconstructPar.auto")
+        if not cfg.dry_run:
+            for proc_dir in cfg.case_dir.glob("processor*"):
+                shutil.rmtree(proc_dir, ignore_errors=True)
+    else:
+        run_command(cfg, ["simpleFoam"], cfg.case_dir / "log.simpleFoam.auto")
+
+
 def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool | int] | None:
     """Phase 4/5: mesh pipeline + solver execution."""
     log_step("Phase 4: running mesh pipeline")
 
     run_command(cfg, ["blockMesh"], cfg.case_dir / "log.blockMesh.auto")
     run_command(cfg, ["surfaceFeatures"], cfg.case_dir / "log.surfaceFeatures.auto")
-    solver_cores = cfg.mesh_cores if cfg.mesh_cores > 0 else 1
     if cfg.mesh_cores > 1:
         # Clean stale snappy fields from prior runs/templates before decomposePar.
-        for stale in [cfg.case_dir / "0" / "cellLevel", cfg.case_dir / "0" / "pointLevel"]:
-            if stale.exists():
-                if cfg.dry_run:
-                    log_step(f"[dry-run] would remove stale field: {stale}")
-                else:
-                    stale.unlink()
-                    log_step(f"Removed stale field before decomposePar: {stale}")
+        remove_stale_snappy_fields(cfg, label="before mesh decompose")
         update_decompose_par(cfg)
         mpirun = shutil.which("mpirun") or shutil.which("mpiexec")
         if mpirun is None:
@@ -782,7 +943,6 @@ def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool | int] | None:
                 f"clamping to {hw_threads}"
             )
             requested = hw_threads
-        solver_cores = requested
         run_command(cfg, ["decomposePar", "-force"], cfg.case_dir / "log.decomposePar.auto")
         snappy_log = cfg.case_dir / "log.snappyHexMesh.auto"
         mpirun_cmd = [
@@ -881,63 +1041,7 @@ def run_mesh_and_solver(cfg: RunConfig) -> dict[str, float | bool | int] | None:
         return mesh_metrics
 
     log_step("Phase 5: running solver")
-    if solver_cores > 1:
-        update_decompose_par(cfg)
-        mpirun = shutil.which("mpirun") or shutil.which("mpiexec")
-        if mpirun is None:
-            raise RuntimeError("mpirun/mpiexec not found for parallel solver.")
-        solver_log = cfg.case_dir / "log.simpleFoam.auto"
-        mpirun_opts: list[str] = []
-        physical_cores, hw_threads = get_core_counts()
-        requested = solver_cores
-        if requested > physical_cores and requested <= hw_threads:
-            mpirun_opts.append("--use-hwthread-cpus")
-            log_step(
-                "Using hardware threads for mpirun slots "
-                f"(requested={requested}, cores={physical_cores}, threads={hw_threads})"
-            )
-        if requested > hw_threads:
-            log_step(
-                f"Requested solver_cores={requested} exceeds available threads ({hw_threads}); "
-                f"clamping to {hw_threads}"
-            )
-            requested = hw_threads
-        run_command(cfg, ["decomposePar", "-force"], cfg.case_dir / "log.decomposePar.auto")
-        mpirun_cmd = [
-            mpirun,
-            *mpirun_opts,
-            "-np",
-            str(requested),
-            "simpleFoam",
-            "-parallel",
-        ]
-        try:
-            run_command(cfg, mpirun_cmd, solver_log)
-        except RuntimeError as exc:
-            if not cfg.dry_run and solver_log.exists():
-                log_text = solver_log.read_text(errors="ignore").lower()
-            else:
-                log_text = ""
-            if "not enough slots" in log_text and "--oversubscribe" not in mpirun_cmd:
-                log_step("mpirun reported not enough slots; retrying solver with --oversubscribe")
-                mpirun_cmd = [
-                    mpirun,
-                    *mpirun_opts,
-                    "--oversubscribe",
-                    "-np",
-                    str(requested),
-                    "simpleFoam",
-                    "-parallel",
-                ]
-                run_command(cfg, mpirun_cmd, solver_log)
-            else:
-                raise
-        run_command(cfg, ["reconstructPar"], cfg.case_dir / "log.reconstructPar.auto")
-        if not cfg.dry_run:
-            for proc_dir in cfg.case_dir.glob("processor*"):
-                shutil.rmtree(proc_dir, ignore_errors=True)
-    else:
-        run_command(cfg, ["simpleFoam"], cfg.case_dir / "log.simpleFoam.auto")
+    run_solver(cfg)
     return mesh_metrics
 
 
@@ -1130,7 +1234,7 @@ def main() -> None:
             log_step("Phase 5 skipped (--skip-solver)")
             return
         log_step("Phase 5: running solver")
-        run_command(cfg, ["simpleFoam"], cfg.case_dir / "log.simpleFoam.auto")
+        run_solver(cfg)
         write_results_json(cfg, mesh_metrics=None)
         log_step("Phase 1.5+2+2.5+3+5 complete (mesh reused)")
         return

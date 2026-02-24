@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "project_name": "fixed_wing_drone_v1",
+  "optimization_problem_file": "optimization_problem_definition.json",
+  "flow_conditions": {
+    "u_inf": 25.0,
+    "rho": 1.225,
+    "nu": 1.5e-5,
+    "turbulence_intensity": 0.05
+  },
+  "geometry_ref": {
+    "vsp_file": "geometry/baseline.vsp3",
+    "a_ref": 0.45,
+    "c_ref": 0.25,
+    "b_ref": 1.0,
+    "target_origin": [0, 0, 0]
+  },
+  "domain_limits": {
+    "x_range": [-1.25, 2.5],
+    "y_range": [-1.25, 1.25],
+    "z_range": [-0.75, 0.75]
+  },
+  "aoa_range": [0, 3, 6, 9, 12],
+  "mesh_params": {
+    "surface_refinement": [4, 5],
+    "wake_refinement": 3,
+    "boundary_layer_layers": 5,
+    "first_layer_thickness": 1e-5
+  },
+  "mesh_quality_thresholds": {
+    "max_non_orthogonality": 70,
+    "max_skewness": 4,
+    "max_aspect_ratio": 100
+  },
+  "solver_params": {
+    "max_iterations": 300,
+    "n_processors": 6,
+    "residual_control": {
+      "p": 1e-4,
+      "U": 1e-5,
+      "k": 1e-4,
+      "omega": 1e-4
+    }
+  },
+  "optimization_runtime": {
+    "mesh_policy": "mesh_once_reuse_within_candidate",
+    "case_name_pattern": "alpha_{alpha}_sweep",
+    "scoring_script": "scripts/score_sweep_results.py"
+  }
+}

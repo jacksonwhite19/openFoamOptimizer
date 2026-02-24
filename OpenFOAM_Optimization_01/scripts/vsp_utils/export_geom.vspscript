@@ -25,36 +25,9 @@ void main()
     ExportFile(stl_out, SET_ALL, EXPORT_STL);
     Update();
 
-    // --- Degen Geometry ---
-    SetAnalysisInputDefaults("DegenGeom");
-    string riddeg = ExecAnalysis("DegenGeom");
-    Update(); // ensure DegenGeom results are ready
-
-    // Get all DegenGeom result IDs
-    array<string> degen_ids = GetStringResults(riddeg, "Degen_DegenGeoms");
-
-    for (int i = 0; i < int(degen_ids.size()); i++)
-    {
-        string type = GetStringResults(degen_ids[i], "type")[0];
-
-        if (type == "LIFTING_SURFACE")
-        {
-            string name = GetStringResults(degen_ids[i], "name")[0];
-
-            // Get plates child result ID
-            array<string> plates_id = GetStringResults(degen_ids[i], "plates");
-
-            if (plates_id.size() > 0)
-            {
-                string fname = "Z:/home/jwhite/JWsim/OpenFOAM_Optimization_01/geometry/outputs/degen_" + name + "_plates.csv";
-                WriteResultsCSVFile(plates_id[0], fname);
-            }
-            else
-            {
-                Print("Warning: No plates result for " + name);
-            }
-        }
-    }
+    // DegenGeom export disabled for optimizer reliability.
+    // The current OpenFOAM pipeline uses massprops + frontal area + DES-derived refs,
+    // and does not consume degen_*_plates.csv.
 
     // --- Clean up ---
     DeleteGeomVec(GetStringResults(ridmp, "Mesh_GeomID"));

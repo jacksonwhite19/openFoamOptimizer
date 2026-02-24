@@ -1,0 +1,11 @@
+{
+  "problem_name": "blended_wing_uav_ld_static_margin",
+  "problem_schema_version": "1.0",
+  "evaluation": {
+    "status": "solver_fail",
+    "error": "[solver_fail] Command failed (1): bash scripts/run_sweep.sh --start 0 --end 8 --step 2 --end-time 400 --uinf 25.0 --averaging-window 50 --mesh-cores 8 --case-prefix iter_0001 --case-suffix sweep --des-file geometry/source/iterations/iter_0001.des. See results/optimizer_runs/doe20_softpen_e400/iter_0001/log.run_sweep.txt",
+    "constraints": {
+      "feasible": false
+    }
+  }
+}
